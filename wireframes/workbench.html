@@ -1,0 +1,400 @@
+<title>Model Workbench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: baseline | difference | candidate across the top, the DAG as a full-width strip below, run history at the foot. */
+:root {
+  --bg: #f3f4f6; --surface: #ffffff; --fg: #1d2330; --muted: #5d6677; --line: #d9dde4;
+  --accent: #2f4fa8; --accent-soft: #e3e9f8;
+  --chg: #8a5300; --chg-soft: #fbecd0; --ok: #2c6b3a; --ok-soft: #dcefe0; --bad: #a3322a; --bad-soft: #f8dcd9;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14171d; --surface: #1c2029; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3542;
+  --accent: #8ea8f0; --accent-soft: #232d48;
+  --chg: #f2c37a; --chg-soft: #3d2f17; --ok: #8fd19e; --ok-soft: #1d3424; --bad: #f19a91; --bad-soft: #3e1f1c; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #14171d; --surface: #1c2029; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3542;
+  --accent: #8ea8f0; --accent-soft: #232d48;
+  --chg: #f2c37a; --chg-soft: #3d2f17; --ok: #8fd19e; --ok-soft: #1d3424; --bad: #f19a91; --bad-soft: #3e1f1c; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 56px; }
+.page { max-width: 1240px; margin: 0 auto; display: grid; gap: 16px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.7rem; } h2 { font-size: 1.15rem; } h3 { font-size: .95rem; }
+p { margin: 0; }
+.mono { font-family: var(--f-mono); font-size: .85em; }
+.muted { color: var(--muted); } .small { font-size: .85rem; }
+.eyebrow { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+.pill { display: inline-flex; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
+.pill.chg { background: var(--chg-soft); color: var(--chg); } .pill.ok { background: var(--ok-soft); color: var(--ok); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.split { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } .split .mid { order: 3; } }
+.field { display: grid; gap: 4px; }
+.field label, .field .lbl { font-size: .75rem; color: var(--muted); font-weight: 600; }
+.val, select, input[type=number] { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; width: 100%; min-height: 38px; }
+.val { background: var(--bg); }
+.edited select, .edited input { border-color: var(--chg); background: var(--chg-soft); color: var(--chg); font-weight: 600; }
+.edited .lbl::after, .edited label::after { content: " · changed"; color: var(--chg); }
+.group { display: grid; gap: 10px; }
+.group + .group { border-top: 1px solid var(--line); padding-top: 10px; }
+.btn { font: 600 .9rem var(--f-body); padding: 9px 16px; border-radius: 6px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--surface); }
+.btn.ghost { border-color: var(--line); color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bar { height: 8px; border-radius: 4px; background: var(--bg); overflow: hidden; border: 1px solid var(--line); }
+.bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.big { font: 700 2.4rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.delta { font-weight: 600; color: var(--chg); }
+.delta.down { color: var(--accent); } .delta.zero { color: var(--muted); }
+.stale { opacity: .45; }
+.layers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.layer { text-align: center; padding: 8px 4px; border-radius: 6px; background: var(--ok-soft); color: var(--ok); font-size: .75rem; font-weight: 600; }
+.layer b { display: block; font-family: var(--f-display); font-size: .8rem; }
+.layer.changed { background: var(--chg-soft); color: var(--chg); }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; font-variant-numeric: tabular-nums; }
+td, th { padding: 5px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+td:last-child, th:last-child { text-align: right; }
+th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.why { background: var(--accent-soft); border-radius: 6px; padding: 10px 12px; font-size: .92rem; }
+.preview { border: 1px dashed var(--chg); border-radius: 6px; padding: 10px 12px; font-size: .9rem; color: var(--chg); background: var(--chg-soft); }
+.dagwrap { overflow-x: auto; }
+.dag { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 6px 14px; min-width: 640px; }
+.colhead { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding-bottom: 2px; }
+.node { font: 500 .78rem var(--f-mono); text-align: left; padding: 6px 8px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; display: flex; justify-content: space-between; gap: 6px; }
+.node .s { color: var(--muted); font-family: var(--f-body); font-size: .7rem; }
+.node.queued { border-style: dotted; color: var(--muted); }
+.node.running { border-color: var(--accent); background: var(--accent-soft); animation: pulse 0.8s ease-in-out infinite; }
+.node.recomputed { border-color: var(--accent); }
+.node.changed { background: var(--chg-soft); border-color: transparent; color: var(--chg); font-weight: 600; }
+.node.root { outline: 2px dashed var(--chg); outline-offset: 1px; }
+.node[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+.node.index { grid-row: 2 / span 10; align-self: center; }
+@keyframes pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .node.running { animation: none; } .bar span { transition: none; } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; border: 1px solid var(--line); background: var(--surface); }
+.legend .l-rec::before { border-color: var(--accent); }
+.legend .l-chg::before { background: var(--chg-soft); border-color: transparent; }
+.legend .l-root::before { outline: 2px dashed var(--chg); outline-offset: -2px; }
+.nodedetail { font-size: .88rem; border-top: 1px solid var(--line); padding-top: 10px; }
+.history { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.hrun { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; background: var(--surface); font-size: .82rem; min-width: 150px; }
+.hrun b { font-family: var(--f-display); }
+.hrun.base { border-color: var(--accent); }
+.sent { background: var(--ok-soft); color: var(--ok); border-radius: 6px; padding: 10px 12px; font-size: .9rem; }
+.sent a { color: inherit; font-weight: 600; }
+.foot { text-align: center; font-size: .8rem; color: var(--muted); }
+</style>
+
+<div class="page">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Construction pack · model builder</div>
+      <h1>Workbench</h1>
+      <p class="muted small">Change the candidate on the right and run it. The middle compares it with the baseline as nodes finish.</p>
+    </div>
+    <span class="pill" id="status">run 123 · finished</span>
+  </div>
+
+  <div class="split">
+    <!-- Baseline -->
+    <section class="card" aria-labelledby="b-h">
+      <div><div class="eyebrow">Baseline</div><h2 id="b-h">run 122</h2><p class="small muted">18 Nov · signed off by the reviewer</p></div>
+      <div class="group">
+        <div class="field"><span class="lbl">Data vintage</span><div class="val">v2026-03</div></div>
+        <div class="field"><span class="lbl">Jump-off year</span><div class="val">2025</div></div>
+        <div class="field"><span class="lbl">model_lib</span><div class="val">v0.3.1</div></div>
+      </div>
+      <div class="group">
+        <div class="field"><span class="lbl">steel_estimation · drift window (years)</span><div class="val">20</div></div>
+        <div class="field"><span class="lbl">electricity_estimation · drift window (years)</span><div class="val">20</div></div>
+      </div>
+      <div class="group"><div class="field"><span class="lbl">cost_index, 2030</span><div class="val mono">148.2</div></div></div>
+    </section>
+
+    <!-- Difference -->
+    <section class="card mid" aria-labelledby="d-h" aria-live="polite">
+      <div class="eyebrow" id="d-h">Difference from baseline</div>
+      <div class="preview" id="preview" hidden></div>
+      <div id="result">
+        <div class="small muted">cost_index, 2030</div>
+        <div><span class="big" id="r-big">150.0</span> <span class="delta" id="r-delta">+1.2%</span></div>
+      </div>
+      <div class="layers" id="r-layers"></div>
+      <div class="why" id="r-why"></div>
+      <div><h3>Root causes</h3><table id="r-roots"></table></div>
+      <div><h3>What moved, 2030</h3><table id="r-moved"></table></div>
+    </section>
+
+    <!-- Candidate -->
+    <section class="card" aria-labelledby="c-h">
+      <div><div class="eyebrow">Candidate</div><h2 id="c-h">run 123</h2><p class="small muted" id="c-sub">Run plan, saved outside git</p></div>
+      <div class="group">
+        <div class="field" id="f-vintage"><label for="i-vintage">Data vintage</label>
+          <select id="i-vintage"><option>v2026-03</option><option>v2026-01</option></select></div>
+        <div class="field" id="f-jump"><label for="i-jump">Jump-off year</label>
+          <select id="i-jump"><option>2025</option><option>2024</option></select></div>
+        <div class="field" id="f-lib"><label for="i-lib">model_lib</label>
+          <select id="i-lib"><option>v0.3.1</option><option>v0.3.2</option><option>v0.4.0</option></select></div>
+      </div>
+      <div class="group">
+        <div class="field" id="f-steel"><label for="i-steel">steel_estimation · drift window (years)</label>
+          <select id="i-steel"><option>10</option><option selected>15</option><option>20</option><option>25</option><option>30</option></select></div>
+        <div class="field" id="f-elec"><label for="i-elec">electricity_estimation · drift window (years)</label>
+          <select id="i-elec"><option>10</option><option>15</option><option selected>20</option><option>25</option><option>30</option></select></div>
+      </div>
+      <div class="group">
+        <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+        <p class="small muted" id="run-info">3 recomputed · 26 from cache · 41 s</p>
+        <div class="actions">
+          <button type="button" class="btn primary" id="btn-run" disabled>Run</button>
+          <button type="button" class="btn ghost" id="btn-reset">Reset to baseline</button>
+          <button type="button" class="btn" id="btn-send">Send to reviewer</button>
+        </div>
+        <div class="sent" id="sent" hidden></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="g-h">
+    <div class="head">
+      <div><h2 id="g-h">The DAG</h2><p class="small muted">29 nodes. Select one to see what happened to it.</p></div>
+      <div class="legend"><span>from cache</span><span class="l-rec">recomputed, same output</span><span class="l-chg">output changed</span><span class="l-root">root cause</span></div>
+    </div>
+    <div class="dagwrap"><div class="dag" id="dag"></div></div>
+    <div class="nodedetail" id="nodedetail"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-h">
+    <h2 id="h-h">Runs</h2>
+    <div class="history" id="history"></div>
+  </section>
+
+  <p class="foot">Wireframe · example data · nothing here is saved or really run</p>
+</div>
+
+<script>
+const MODELS = ["electricity","diesel_fuel","steel","cement_concrete","lumber","insulation","paint_coatings","labor_wages","equipment"];
+const BASE30 = {electricity:152.3, diesel_fuel:158.8, steel:161.4, cement_concrete:149.0, lumber:139.5, insulation:146.2, paint_coatings:143.7, labor_wages:151.9, equipment:141.0};
+const ELEC_TO = {steel:.25, cement_concrete:.15, insulation:.20, paint_coatings:.10};
+const WINDOW_EFFECT = {10:.098, 15:.059, 20:0, 25:-.016, 30:-.024};
+const BASELINE = {vintage:"v2026-03", jump:"2025", lib:"v0.3.1", steel:"20", elec:"20"};
+const COST_BASE = 148.2;
+const $ = id => document.getElementById(id);
+const inputs = {vintage:$("i-vintage"), jump:$("i-jump"), lib:$("i-lib"), steel:$("i-steel"), elec:$("i-elec")};
+const fields = {vintage:"f-vintage", jump:"f-jump", lib:"f-lib", steel:"f-steel", elec:"f-elec"};
+const read = () => Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.value]));
+
+// Fake engine: which nodes recompute, which outputs change, and by how much.
+function evaluate(c) {
+  const rec = new Set(), roots = [], pct = Object.fromEntries(MODELS.map(m => [m, 0]));
+  const layers = {code:false, config:false, data:false, meta:false, struct:false};
+  const all = (kind) => MODELS.forEach(m => rec.add(m + "_" + kind));
+  if (c.steel !== BASELINE.steel) {
+    layers.config = true; roots.push(["steel_estimation", "config", `drift window ${BASELINE.steel} → ${c.steel}`]);
+    rec.add("steel_estimation"); rec.add("steel_projection"); pct.steel += WINDOW_EFFECT[c.steel];
+  }
+  if (c.elec !== BASELINE.elec) {
+    layers.config = true; roots.push(["electricity_estimation", "config", `drift window ${BASELINE.elec} → ${c.elec}`]);
+    rec.add("electricity_estimation"); rec.add("electricity_projection");
+    const e = WINDOW_EFFECT[c.elec] * .8; pct.electricity += e;
+    Object.entries(ELEC_TO).forEach(([m, b]) => { rec.add(m + "_projection"); pct[m] += b * e; });
+  }
+  if (c.jump !== BASELINE.jump) {
+    layers.meta = true; roots.push(["metadata", "metadata", `jump-off year ${BASELINE.jump} → ${c.jump}`]);
+    all("estimation"); all("projection"); MODELS.forEach(m => pct[m] -= .006);
+  }
+  if (c.lib !== BASELINE.lib) {
+    layers.code = true; roots.push(["model_lib", "code", `${BASELINE.lib} → ${c.lib}`]);
+    all("estimation"); all("projection"); rec.add("cost_index");
+    if (c.lib === "v0.4.0") MODELS.forEach(m => pct[m] += .001);
+  }
+  if (c.vintage !== BASELINE.vintage) {
+    layers.data = true; layers.struct = true; roots.push(["steel_raw, lumber_raw", "data", `vintage ${BASELINE.vintage} → ${c.vintage} (2 series revised)`]);
+    ["steel", "lumber"].forEach(m => { rec.add(m + "_raw"); rec.add(m + "_estimation"); rec.add(m + "_projection"); });
+    pct.steel -= .008; pct.lumber -= .011;
+  }
+  const changedModels = MODELS.filter(m => Math.abs(pct[m]) > 1e-9);
+  const costPct = MODELS.reduce((s, m) => s + pct[m], 0) / MODELS.length * 1.83;
+  if (rec.size) rec.add("cost_index");
+  const changed = new Set();
+  changedModels.forEach(m => { changed.add(m + "_projection"); changed.add(m + "_estimation"); });
+  if (c.vintage !== BASELINE.vintage) { changed.add("steel_raw"); changed.add("lumber_raw"); }
+  // electricity changes leak into downstream projections only, not their estimations
+  Object.keys(ELEC_TO).forEach(m => { if (c.elec !== BASELINE.elec && c.steel === BASELINE.steel && c.jump === BASELINE.jump && c.vintage === BASELINE.vintage) changed.delete(m + "_estimation"); });
+  if (c.steel !== BASELINE.steel && c.elec === BASELINE.elec && c.jump === BASELINE.jump) changed.add("steel_estimation");
+  if (Math.abs(costPct) > 1e-9) changed.add("cost_index");
+  if (changed.size) layers.data = true;
+  const rootNodes = new Set();
+  if (c.steel !== BASELINE.steel) rootNodes.add("steel_estimation");
+  if (c.elec !== BASELINE.elec) rootNodes.add("electricity_estimation");
+  if (c.vintage !== BASELINE.vintage) { rootNodes.add("steel_raw"); rootNodes.add("lumber_raw"); }
+  return {rec, changed, rootNodes, roots, pct, costPct, layers};
+}
+
+function why(c, r) {
+  if (!r.roots.length) return "Nothing differs from the baseline. Every node would come from cache.";
+  const parts = [];
+  if (c.steel !== BASELINE.steel) parts.push(`the steel drift window went from ${BASELINE.steel} to ${c.steel} years, moving steel 2030 by ${fmt(r.pct.steel)}`);
+  if (c.elec !== BASELINE.elec) parts.push(`the electricity drift window went from ${BASELINE.elec} to ${c.elec} years, which also flows into steel, cement, insulation and paint`);
+  if (c.jump !== BASELINE.jump) parts.push(`the jump-off year moved to ${c.jump}, so every model re-estimated on one year less data`);
+  if (c.lib !== BASELINE.lib) parts.push(c.lib === "v0.3.2" ? `model_lib moved to v0.3.2; every model reran but produced identical output` : `model_lib moved to v0.4.0, which nudged every model slightly`);
+  if (c.vintage !== BASELINE.vintage) parts.push(`the ${c.vintage} data vintage revised the steel and lumber history`);
+  const tail = Math.abs(r.costPct) > 1e-9 ? ` Together these move cost_index 2030 by ${fmt(r.costPct)}.` : " cost_index is unchanged.";
+  return parts.map((p, i) => i ? p : p[0].toUpperCase() + p.slice(1)).join("; ") + "." + tail;
+}
+const fmt = p => (p > 0 ? "+" : p < 0 ? "−" : "±") + Math.abs(p * 100).toFixed(1) + "%";
+const cls = p => p > 1e-9 ? "delta" : p < -1e-9 ? "delta down" : "delta zero";
+
+// DAG
+const dag = $("dag"), nodeEls = {};
+const nodeOrder = [];
+["Data", "Estimation", "Projection", "Index"].forEach(h => { const d = document.createElement("div"); d.className = "colhead"; d.textContent = h; dag.appendChild(d); });
+function addNode(name, col, row, extra) {
+  const b = document.createElement("button"); b.type = "button"; b.className = "node" + (extra ? " " + extra : "");
+  b.style.gridColumn = col; if (row) b.style.gridRow = row;
+  b.innerHTML = `<span>${name}</span><span class="s"></span>`; b.onclick = () => select(name);
+  dag.appendChild(b); nodeEls[name] = b; nodeOrder.push(name);
+}
+MODELS.forEach((m, i) => { addNode(m + "_raw", 1, i + 2); addNode(m + "_estimation", 2, i + 2); addNode(m + "_projection", 3, i + 2); });
+addNode("passthrough", 1, 11);
+addNode("cost_index", 4, null, "index");
+
+let state = {committed: null, result: null, runNo: 123, selected: "steel_estimation", running: false};
+function paintDag(r, phase) {
+  nodeOrder.forEach(n => {
+    const el = nodeEls[n], s = el.querySelector(".s");
+    el.classList.remove("queued", "running", "recomputed", "changed", "root");
+    let label = "cache";
+    if (phase && phase[n]) { el.classList.add(phase[n]); label = phase[n] === "queued" ? "waiting" : "running"; }
+    else if (r && r.rec.has(n)) {
+      if (r.changed.has(n)) { el.classList.add("changed"); label = "changed"; } else { el.classList.add("recomputed"); label = "same"; }
+      if (r.rootNodes.has(n)) el.classList.add("root");
+    }
+    s.textContent = label;
+    el.setAttribute("aria-pressed", n === state.selected);
+  });
+}
+function select(n) {
+  state.selected = n; paintDag(state.result);
+  const r = state.result, d = $("nodedetail");
+  const m = MODELS.find(x => n.startsWith(x));
+  let text;
+  if (!r || !r.rec.has(n)) text = "Inputs unchanged, so the output was reused from cache.";
+  else if (!r.changed.has(n)) text = "Recomputed because an input changed, but the output came out identical. The trace stops here.";
+  else if (n === "cost_index") text = `Recomputed. 2030 value ${(COST_BASE * (1 + r.costPct)).toFixed(1)} vs ${COST_BASE} (${fmt(r.costPct)}).`;
+  else if (m && n.endsWith("_projection")) text = `Recomputed. 2030 value ${(BASE30[m] * (1 + r.pct[m])).toFixed(1)} vs ${BASE30[m]} (${fmt(r.pct[m])}).`;
+  else text = r.rootNodes.has(n) ? "Root cause: its own inputs changed while its upstream did not." : "Recomputed with a changed output.";
+  d.innerHTML = `<b class="mono">${n}</b> · ${text}`;
+}
+
+function renderResult(c, r, stale) {
+  const v = COST_BASE * (1 + r.costPct);
+  $("r-big").textContent = v.toFixed(1);
+  $("r-delta").textContent = fmt(r.costPct) + " vs " + COST_BASE; $("r-delta").className = cls(r.costPct);
+  const L = [["code","Code"],["config","Config"],["data","Data"],["meta","Metadata"],["struct","Structure"]];
+  $("r-layers").innerHTML = L.map(([k, n]) => `<div class="layer ${r.layers[k] ? "changed" : ""}"><b>${n}</b>${r.layers[k] ? "changed" : "same"}</div>`).join("");
+  $("r-why").textContent = why(c, r);
+  $("r-roots").innerHTML = r.roots.length ? r.roots.map(([n, l, w]) => `<tr><td class="mono">${n}</td><td>${w}</td><td><span class="pill chg">${l}</span></td></tr>`).join("") : `<tr><td class="muted">None</td><td></td><td></td></tr>`;
+  const moved = MODELS.filter(m => Math.abs(r.pct[m]) > 1e-9).sort((a, b) => Math.abs(r.pct[b]) - Math.abs(r.pct[a]));
+  $("r-moved").innerHTML = `<tr><th>Output</th><th>Baseline</th><th>Change</th></tr>` +
+    moved.map(m => `<tr><td class="mono">${m}</td><td>${BASE30[m]}</td><td class="${cls(r.pct[m])}">${fmt(r.pct[m])}</td></tr>`).join("") +
+    `<tr><td class="mono"><b>cost_index</b></td><td>${COST_BASE}</td><td class="${cls(r.costPct)}">${fmt(r.costPct)}</td></tr>`;
+  ["result", "r-layers", "r-why", "r-roots", "r-moved"].forEach(id => $(id).classList.toggle("stale", !!stale));
+}
+
+function sameAs(a, b) { return a && Object.keys(a).every(k => a[k] === b[k]); }
+function onEdit() {
+  const c = read();
+  Object.keys(fields).forEach(k => $(fields[k]).classList.toggle("edited", c[k] !== BASELINE[k]));
+  const dirty = !sameAs(state.committed, c);
+  $("btn-run").disabled = !dirty || state.running;
+  $("btn-send").disabled = dirty || state.running || !state.committed;
+  const p = $("preview");
+  if (dirty) {
+    const r = evaluate(c);
+    p.hidden = false;
+    p.textContent = r.rec.size ? `Not run yet. Running will recompute ${r.rec.size} of 29 nodes; ${29 - r.rec.size} come from cache.` : "Not run yet. This matches the baseline, so every node would come from cache.";
+    $("status").textContent = `run ${state.runNo + 1} · draft`; $("status").className = "pill chg";
+    $("c-h").textContent = `run ${state.runNo + 1}`; $("c-sub").textContent = "Draft run plan, saved outside git";
+    ["result", "r-layers", "r-why", "r-roots", "r-moved"].forEach(id => $(id).classList.add("stale"));
+  } else {
+    p.hidden = true;
+    if (state.result) renderResult(c, state.result, false);
+    $("status").textContent = `run ${state.runNo} · finished`; $("status").className = "pill";
+    $("c-h").textContent = `run ${state.runNo}`; $("c-sub").textContent = "Run plan, saved outside git";
+  }
+}
+Object.values(inputs).forEach(el => el.addEventListener("change", () => { $("sent").hidden = true; onEdit(); }));
+
+function run() {
+  const c = read(), r = evaluate(c);
+  state.running = true; state.runNo += 1; $("preview").hidden = true; $("sent").hidden = true;
+  $("btn-run").disabled = true; $("btn-send").disabled = true; $("btn-reset").disabled = true;
+  $("status").textContent = `run ${state.runNo} · running`; $("status").className = "pill chg";
+  $("c-h").textContent = `run ${state.runNo}`;
+  const order = nodeOrder.filter(n => r.rec.has(n));
+  // run in dependency order: raw, estimation, electricity projection, other projections, cost_index
+  const rank = n => n.endsWith("_raw") ? 0 : n.endsWith("_estimation") ? 1 : n === "electricity_projection" ? 2 : n.endsWith("_projection") ? 3 : 4;
+  order.sort((a, b) => rank(a) - rank(b));
+  const phase = Object.fromEntries(order.map(n => [n, "queued"]));
+  state.result = null; paintDag(null, phase);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const step = reduce ? 0 : Math.max(90, Math.min(380, 2400 / Math.max(order.length, 1)));
+  let i = 0;
+  const partial = {rec: new Set(), changed: r.changed, rootNodes: r.rootNodes};
+  const tick = () => {
+    if (i > 0) { delete phase[order[i - 1]]; partial.rec.add(order[i - 1]); }
+    if (i < order.length) {
+      phase[order[i]] = "running"; paintDag(partial, phase);
+      $("bar").style.width = Math.round(i / Math.max(order.length, 1) * 100) + "%";
+      $("run-info").textContent = `Running ${order[i]} · ${i} of ${order.length} done`;
+      i++; setTimeout(tick, step);
+    } else finish(c, r);
+  };
+  tick();
+}
+function finish(c, r) {
+  state.running = false; state.committed = c; state.result = r;
+  $("bar").style.width = "100%";
+  const secs = Math.round(6 + r.rec.size * 11.5);
+  $("run-info").textContent = `${r.rec.size} recomputed · ${29 - r.rec.size} from cache · ${secs} s`;
+  $("btn-reset").disabled = false;
+  paintDag(r); renderResult(c, r, false); onEdit(); select(state.selected);
+  addHistory(state.runNo, c, r, false);
+}
+
+const history = $("history");
+function addHistory(no, c, r, base) {
+  const d = document.createElement("div"); d.className = "hrun" + (base ? " base" : "");
+  const what = base ? "baseline · signed off" : (r.roots.map(x => x[2]).join("; ") || "no changes");
+  d.innerHTML = `<b>run ${no}</b> <span class="${cls(r ? r.costPct : 0)} small">${r ? fmt(r.costPct) : "—"}</span><br><span class="muted">${what}</span>`;
+  history.insertBefore(d, base ? null : history.firstChild);
+}
+
+$("btn-run").onclick = run;
+$("btn-reset").onclick = () => { Object.entries(BASELINE).forEach(([k, v]) => inputs[k].value = v); $("sent").hidden = true; onEdit(); };
+$("btn-send").onclick = () => {
+  const s = $("sent"); s.hidden = false;
+  s.innerHTML = `Sent run ${state.runNo} to the reviewer. They'll read it as a story: <a href="story-review.html">open the reviewer's view</a>.`;
+};
+
+// Opening state: run 123 has finished (steel drift window 20 → 15).
+(function boot() {
+  addHistory(122, BASELINE, {costPct: 0, roots: []}, true);
+  const c = read(), r = evaluate(c);
+  state.committed = c; state.result = r;
+  $("bar").style.width = "100%";
+  addHistory(123, c, r, false);
+  paintDag(r); renderResult(c, r, false); onEdit(); select("steel_estimation");
+})();
+</script>
