@@ -1,0 +1,44 @@
+<title>Merkle DAG Wireframes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: a short intro and two cards, one per persona. */
+:root {
+  --bg: #f3f4f6; --surface: #ffffff; --fg: #1d2330; --muted: #5d6677; --line: #d9dde4; --accent: #2f4fa8; --accent-soft: #e3e9f8;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif; --f-body: "Inter", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14171d; --surface: #1c2029; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3542; --accent: #8ea8f0; --accent-soft: #232d48; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #14171d; --surface: #1c2029; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3542; --accent: #8ea8f0; --accent-soft: #232d48; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; }
+.page { max-width: 820px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2 { font-family: var(--f-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.9rem; } h2 { font-size: 1.25rem; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.card { display: grid; gap: 8px; align-content: start; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
+.card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
+.go { color: var(--accent); font-weight: 600; font-size: .9rem; }
+.scenario { background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; font-size: .92rem; }
+code { font-size: .85em; }
+</style>
+
+<div class="page">
+  <div>
+    <div class="eyebrow">Wireframes · example data</div>
+    <h1>One run, two views</h1>
+    <p class="muted">The model builder sets up, runs and compares on the workbench. The reviewer reads the finished run as a story and signs it off.</p>
+  </div>
+  <div class="cards">
+    <a class="card" href="workbench.html"><div class="eyebrow">Model builder</div><h2>Workbench</h2>
+      <p class="muted">Baseline and candidate side by side. Change settings, run, and watch the DAG and the comparison fill in.</p><span class="go">Open the workbench →</span></a>
+    <a class="card" href="story-review.html"><div class="eyebrow">Reviewer</div><h2>Run story</h2>
+      <p class="muted">Seven short chapters from what changed to why, with the trace and diffs, ending in sign-off.</p><span class="go">Open the story →</span></a>
+  </div>
+  <p class="scenario">Starting scenario in both: the drift window in <code>steel_estimation</code> goes from 20 to 15 years. Run 123 is compared with run 122, and <code>cost_index</code> 2030 moves from 148.2 to 150.0 (+1.2%).</p>
+</div>

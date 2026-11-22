@@ -2,7 +2,6 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Layout: a short intro and two cards, one per persona. */
 :root {
   --bg: #f3f4f6; --surface: #ffffff; --fg: #1d2330; --muted: #5d6677; --line: #d9dde4; --accent: #2f4fa8; --accent-soft: #e3e9f8;
   --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif; --f-body: "Inter", system-ui, sans-serif;
@@ -14,7 +13,7 @@
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--f-body);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; }
-.page { max-width: 820px; margin: 0 auto; display: grid; gap: 20px; }
+.page { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
 h1, h2 { font-family: var(--f-display); margin: 0; text-wrap: balance; }
 h1 { font-size: 1.9rem; } h2 { font-size: 1.25rem; }
 p { margin: 0; }
@@ -24,21 +23,21 @@ p { margin: 0; }
 .card { display: grid; gap: 8px; align-content: start; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
 .card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
 .go { color: var(--accent); font-weight: 600; font-size: .9rem; }
-.scenario { background: var(--accent-soft); border-radius: 8px; padding: 14px 16px; font-size: .92rem; }
-code { font-size: .85em; }
+.small { font-size: .85rem; }
+a { color: var(--accent); }
 </style>
 
 <div class="page">
   <div>
     <div class="eyebrow">Wireframes · example data</div>
-    <h1>One run, two views</h1>
-    <p class="muted">The model builder sets up, runs and compares on the workbench. The reviewer reads the finished run as a story and signs it off.</p>
+    <h1>Merkle DAG: configure, run, inspect</h1>
+    <p class="muted">Two pages. Set up a candidate run on the first; read the lineage and the diffs it produced on the second. Use the header on either page to switch.</p>
   </div>
   <div class="cards">
-    <a class="card" href="workbench.html"><div class="eyebrow">Model builder</div><h2>Workbench</h2>
-      <p class="muted">Baseline and candidate side by side. Change settings, run, and watch the DAG and the comparison fill in.</p><span class="go">Open the workbench →</span></a>
-    <a class="card" href="story-review.html"><div class="eyebrow">Reviewer</div><h2>Run story</h2>
-      <p class="muted">Seven short chapters from what changed to why, with the trace and diffs, ending in sign-off.</p><span class="go">Open the story →</span></a>
+    <a class="card" href="config.html"><div class="eyebrow">Step 1</div><h2>Configure &amp; run</h2>
+      <p class="muted">Global settings and per-model node configs, baseline beside candidate. Then run.</p><span class="go">Open configure →</span></a>
+    <a class="card" href="dag_diff.html"><div class="eyebrow">Step 2</div><h2>DAG &amp; diff</h2>
+      <p class="muted">The lineage graph on top; select a node and its code, config, data and metadata diffs open below.</p><span class="go">Open DAG &amp; diff →</span></a>
   </div>
-  <p class="scenario">Starting scenario in both: the drift window in <code>steel_estimation</code> goes from 20 to 15 years. Run 123 is compared with run 122, and <code>cost_index</code> 2030 moves from 148.2 to 150.0 (+1.2%).</p>
+  <p class="small muted">Starting scenario: the drift window in <code>steel_estimation</code> goes from 20 to 15 years. Other wireframes are kept in <a href="index_all.html">the full list</a>.</p>
 </div>
