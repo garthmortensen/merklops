@@ -1,4 +1,4 @@
-<title>Configure and run</title>
+<title>Orchestration</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -188,14 +188,15 @@ details summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
 .runrow .what { color: var(--muted); }
 @media (max-width: 700px) { .runrow { grid-template-columns: 60px 1fr auto; } .runrow .what { grid-column: 1 / -1; } }
 </style>
+<link rel="stylesheet" href="airy.css">
 
 <div class="page">
-  <nav class="sitenav" aria-label="Wireframes"><a class="home" href="index.html">← Home</a><a href="config.html" aria-current="page">1 · Configure &amp; run</a><a href="dag_diff.html">2 · DAG &amp; diff</a></nav>
+  <nav class="sitenav" aria-label="Wireframes"><a class="home" href="index.html">← Home</a><a href="config.html" aria-current="page">1 · Orchestration</a><a href="dag_diff.html">2 · Delta</a></nav>
     <div class="head">
     <div>
       <div class="eyebrow">Step 1 of 2 · set the candidate</div>
-      <h1>Configure &amp; run</h1>
-      <p class="muted small">Baseline on the left, your candidate on the right. Every setting is shown in the file it lives in. Changes go into a run plan outside git. Results are on the <a href="dag_diff.html">DAG &amp; diff page</a>.</p>
+      <h1>Orchestration</h1>
+      <p class="muted small">Baseline on the left, your candidate on the right. Every setting is shown in the file it lives in. Changes go into a run plan outside git. Results are on the <a href="dag_diff.html">Delta page</a>.</p>
     </div>
     <span class="pill" id="status">run 123 · finished</span>
   </div>
@@ -247,7 +248,7 @@ details summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
     <div class="bar" aria-hidden="true"><span id="bar"></span></div>
         <div class="preview" id="preview" hidden></div>
     <details open><summary id="plan-h">Run plan</summary><pre class="plan" id="plan"></pre></details>
-    <a class="btn primary" id="to-results" href="dag_diff.html" hidden>See the DAG &amp; diff →</a>
+    <a class="btn primary" id="to-results" href="dag_diff.html" hidden>See the delta →</a>
   </section>
 
   <section class="card" aria-labelledby="rh-h">
@@ -271,7 +272,7 @@ const UP = {}; Object.entries(PASS).forEach(([f, to]) => Object.entries(to).forE
 const WINDOW_EFFECT = {10:.098, 15:.059, 20:0, 25:-.016, 30:-.024};
 const COST_BASE = 148.2;
 const REGIONS = [["national:US","national · US"],["state:08","state · 08 (Colorado)"],["county:08031","county · 08031 (Denver)"],["zip:80202","zip · 80202"]];
-const LAYERS = [["code","Code","C"],["config","Config","K"],["data","Data","D"],["meta","Metadata","M"],["env","Environment","E"],["struct","Structure","S"]];
+const LAYERS = [["config","Config","K"],["code","Code","C"],["data","Data","D"],["meta","Metadata","M"],["env","Environment","E"],["struct","Structure","S"]];
 const NODE_L = LAYERS.slice(0, 5);
 // environment layer: system-level factors; every compute node uses the runtime keys, nodes that declare env: [db] also use the database keys
 const ENV_RT = ["image", "py", "uv"], ENV_DB = ["db", "odbc", "ini"];
@@ -458,24 +459,24 @@ function modelRows(m) {
     {k:"source", ro:() => `synthetic fixture, seed ${seed} · real phase: BLS ${SERIES[m]}`},
     {k:"vintage", sub:"the @ ref in each consumer's inputs.history", path:["nodes", raw, "vintage"], opts:[["v2026-03","v2026-03"],["v2026-01","v2026-01"]], res:c => "content " + short(sha(raw + (REVISION[m] ? c.nodes[raw].vintage : "same")))},
     {file:`nodes/${est}.yml`, note:"compute · writes coefficients.csv"},
-    ...refRows(est),
     {k:"params.drift_window", sub:"years", path:["nodes", est, "win"], opts:[10,15,20,25,30].map(v => [String(v), String(v)])},
     {k:"inputs", ro:c => `history: ${hist(c)}<br>prior: passthrough.prior`},
+    ...refRows(est),
     {k:"metadata · env", ro:() => "[jump_off_year] · " + (DBN.has(est) ? "[runtime, db] (reads history from the warehouse)" : "[runtime]")},
     {file:`nodes/${proj}.yml`, note:"compute · writes prices.csv"},
-    ...refRows(proj),
     {k:"inputs.coefficients", sub:"live, or pinned to a label in versions.yml", path:["nodes", proj, "coef"], opts:[["live", `${est}.coefficients`], ["pinned", `${est}.coefficients@baseline_a`]]},
     {k:"other inputs", ro:c => `history: ${hist(c)}` + (ups.length ? `<br>upstream_prices: [${ups.map(u => u + "_projection.prices").join(", ")}]` : "")},
+    ...refRows(proj),
     {k:"params · metadata", ro:() => "horizon: 5 · [jump_off_year]"},
   ];
 }
 function costRows() {
   return [
     {file:"nodes/cost_index.yml", note:"compute · aggregator · writes cost_index.csv and cost_index_weights.csv"},
-    ...refRows("cost_index"),
     {k:"params.base_year", sub:"literal, never from the clock", path:["nodes","cost_index","base_year"], opts:[["2026","2026"],["2025","2025"]]},
     {k:"weights", path:["nodes","cost_index","weights"], opts:[["equal","equal (1/9 each)"],["labor","labor_wages ×2"]]},
     {k:"inputs", ro:() => "prices: the 9 *_projection.prices"},
+    ...refRows("cost_index"),
     {file:"nodes/passthrough.yml", note:"data node · hand-written prior, later Leontief / RIMS II"},
     {k:"passthrough.csv", ro:() => "from_model,to_model,coefficient · 8 rows"},
   ];

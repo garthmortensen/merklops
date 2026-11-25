@@ -1,4 +1,4 @@
-<title>Merkle DAG Wireframes</title>
+<title>Merklops</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -19,25 +19,98 @@ h1 { font-size: 1.9rem; } h2 { font-size: 1.25rem; }
 p { margin: 0; }
 .muted { color: var(--muted); }
 .eyebrow { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.cards { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 64ch; }
 .card { display: grid; gap: 8px; align-content: start; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px; }
 .card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
 .go { color: var(--accent); font-weight: 600; font-size: .9rem; }
 .small { font-size: .85rem; }
 a { color: var(--accent); }
+.card .eyebrow, .card p, .scenario { display: none; }
+.cards > .card { padding-left: 84px; }
+.cards > .card h2 { align-self: center; }
+.about { display: grid; gap: 14px; max-width: 64ch; }
+.about h2 { font-size: 1.15rem; }
+.about p { color: var(--muted); font-size: .95rem; }
+.about p b { color: var(--fg); font-weight: 600; }
+.about ul, .about ol { margin: 0; padding-left: 1.2rem; color: var(--muted); font-size: .95rem; display: grid; gap: 6px; }
+.about { gap: 26px; }
+.about .block { display: grid; gap: 10px; padding-top: 18px; border-top: 1px solid var(--line); }
+.about h3 { font: 600 .72rem var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0; }
+.about .lead { font: 600 1.15rem var(--f-display); color: var(--fg); }
+.about li b { color: var(--fg); font-weight: 600; }
+.about .mini { width: 100%; max-width: 640px; height: auto; margin: 4px 0; }
+.mini text { font: 500 11px var(--f-mono); fill: var(--fg); }
+.mini .colh { font: 600 9px var(--f-body); fill: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.mini .n rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+.mini .n.chg rect { fill: var(--chg-soft); stroke: var(--chg); stroke-width: 2; }
+.mini .n.aff rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.mini .ed { fill: none; stroke: var(--muted); stroke-width: 1.2; opacity: .45; }
+.mini .ed.dash { stroke-dasharray: 5 4; }
+.mini .ed.hot { stroke: var(--chg); stroke-width: 2; opacity: 1; }
 </style>
+<link rel="stylesheet" href="airy.css">
 
 <div class="page">
   <div>
     <div class="eyebrow">Wireframes · example data</div>
-    <h1>Merkle DAG: configure, run, inspect</h1>
-    <p class="muted">Two pages. Set up a candidate run on the first; read the lineage and the diffs it produced on the second. Use the header on either page to switch.</p>
+    <h1>Merklops</h1>
+    <p class="muted">Configure a run, then see the impact</p>
   </div>
   <div class="cards">
-    <a class="card" href="config.html"><div class="eyebrow">Step 1</div><h2>Configure &amp; run</h2>
-      <p class="muted">Global settings and per-model node configs, baseline beside candidate. Then run.</p><span class="go">Open configure →</span></a>
-    <a class="card" href="dag_diff.html"><div class="eyebrow">Step 2</div><h2>DAG &amp; diff</h2>
-      <p class="muted">The lineage graph on top; select a node and its code, config, data and metadata diffs open below.</p><span class="go">Open DAG &amp; diff →</span></a>
+    <a class="card" href="config.html"><div class="eyebrow">Step 1</div><h2>Orchestration</h2>
+      <p class="muted">Global settings and per-model node configs, baseline beside candidate. Then run.</p><span class="go">Open orchestration →</span></a>
+    <a class="card" href="dag_diff.html"><div class="eyebrow">Step 2</div><h2>Delta</h2>
+      <p class="muted">The lineage graph on top; select a node and its config, code, data and metadata diffs open below.</p><span class="go">Open delta →</span></a>
   </div>
-  <p class="small muted">Starting scenario: the drift window in <code>steel_estimation</code> goes from 20 to 15 years. Other wireframes are kept in <a href="index_all.html">the full list</a>.</p>
+  <section class="about" aria-labelledby="ab-h">
+    <h2 id="ab-h">About</h2>
+    <p class="lead">A Merkle DAG makes every model run diffable and reproducible.</p>
+
+    <div class="block">
+      <h3>How it works</h3>
+      <ol>
+        <li><b>Every node has a hash</b> of its inputs and its parents' hashes. Change one input and every hash downstream changes.</li>
+        <li><b>The root hash</b> fingerprints the whole run. Same root hash, same run.</li>
+        <li><b>Different roots?</b> Walk the lineage to the first changed hash. That is the root cause.</li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>The graph</h3>
+      <svg class="mini" viewBox="0 0 634 266" role="img" aria-label="Model dependency graph: electricity, diesel_fuel and labor_wages feed prices into other models; all models feed cost_index. steel is changed, cost_index is affected.">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker><marker id="ahc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--chg)"/></marker></defs>
+    <text class="colh" x="0" y="12">Feeds prices to</text>
+    <text class="colh" x="240" y="12">Models</text>
+    <text class="colh" x="480" y="12">Index</text>
+    <path class="ed dash" d="M150,38.0 C195.0,38.0 195.0,38.0 240,38.0" marker-end="url(#ah)"/>
+    <path class="ed dash" d="M150,38.0 C195.0,38.0 195.0,80.0 240,80.0" marker-end="url(#ah)"/>
+    <path class="ed dash" d="M150,38.0 C195.0,38.0 195.0,164.0 240,164.0" marker-end="url(#ah)"/>
+    <path class="ed dash" d="M150,38.0 C195.0,38.0 195.0,206.0 240,206.0" marker-end="url(#ah)"/>
+    <path class="ed dash" d="M150,118.0 C195.0,118.0 195.0,80.0 240,80.0" marker-end="url(#ah)"/>
+    <path class="ed dash" d="M150,118.0 C195.0,118.0 195.0,122.0 240,122.0" marker-end="url(#ah)"/>
+    <path class="ed dash" d="M150,118.0 C195.0,118.0 195.0,248.0 240,248.0" marker-end="url(#ah)"/>
+    <path class="ed dash" d="M150,198.0 C195.0,198.0 195.0,248.0 240,248.0" marker-end="url(#ah)"/>
+    <path class="ed hot" d="M390,38.0 C435.0,38.0 435.0,143.0 480,143.0" marker-end="url(#ahc)"/>
+    <path class="ed" d="M390,80.0 C435.0,80.0 435.0,143.0 480,143.0" marker-end="url(#ah)"/>
+    <path class="ed" d="M390,122.0 C435.0,122.0 435.0,143.0 480,143.0" marker-end="url(#ah)"/>
+    <path class="ed" d="M390,164.0 C435.0,164.0 435.0,143.0 480,143.0" marker-end="url(#ah)"/>
+    <path class="ed" d="M390,206.0 C435.0,206.0 435.0,143.0 480,143.0" marker-end="url(#ah)"/>
+    <path class="ed" d="M390,248.0 C435.0,248.0 435.0,143.0 480,143.0" marker-end="url(#ah)"/>
+    <g class="n"><rect x="0" y="24" width="150" height="28" rx="6"/><text x="75.0" y="42.0" text-anchor="middle">electricity</text></g>
+    <g class="n"><rect x="0" y="104" width="150" height="28" rx="6"/><text x="75.0" y="122.0" text-anchor="middle">diesel_fuel</text></g>
+    <g class="n"><rect x="0" y="184" width="150" height="28" rx="6"/><text x="75.0" y="202.0" text-anchor="middle">labor_wages</text></g>
+    <g class="n chg"><rect x="240" y="24" width="150" height="28" rx="6"/><text x="315.0" y="42.0" text-anchor="middle">steel</text></g>
+    <g class="n"><rect x="240" y="66" width="150" height="28" rx="6"/><text x="315.0" y="84.0" text-anchor="middle">cement_concrete</text></g>
+    <g class="n"><rect x="240" y="108" width="150" height="28" rx="6"/><text x="315.0" y="126.0" text-anchor="middle">lumber</text></g>
+    <g class="n"><rect x="240" y="150" width="150" height="28" rx="6"/><text x="315.0" y="168.0" text-anchor="middle">insulation</text></g>
+    <g class="n"><rect x="240" y="192" width="150" height="28" rx="6"/><text x="315.0" y="210.0" text-anchor="middle">paint_coatings</text></g>
+    <g class="n"><rect x="240" y="234" width="150" height="28" rx="6"/><text x="315.0" y="252.0" text-anchor="middle">equipment</text></g>
+    <g class="n aff"><rect x="480" y="129.0" width="150" height="28" rx="6"/><text x="555.0" y="147.0" text-anchor="middle">cost_index</text></g>
+    </svg>
+      <p class="muted">Example: <code>steel_estimation</code> drift window 20 → 15. Steel and <code>cost_index</code> rerun; the rest are cache hits.</p>
+    </div>
+
+
+  </section>
+  <p class="small muted"><a href="index_all.html">All wireframes</a></p>
 </div>

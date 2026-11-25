@@ -1,4 +1,4 @@
-<title>DAG and diff</title>
+<title>Delta</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
@@ -141,14 +141,15 @@ td.h.new { color: var(--chg); font-weight: 600; }
 .sitenav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
 .sitenav .home { margin-right: 10px; }
 </style>
+<link rel="stylesheet" href="airy.css">
 
 <div class="page">
-  <nav class="sitenav" aria-label="Wireframes"><a class="home" href="index.html">← Home</a><a href="config.html">1 · Configure &amp; run</a><a href="dag_diff.html" aria-current="page">2 · DAG &amp; diff</a></nav>
+  <nav class="sitenav" aria-label="Wireframes"><a class="home" href="index.html">← Home</a><a href="config.html">1 · Orchestration</a><a href="dag_diff.html" aria-current="page">2 · Delta</a></nav>
     <div class="head">
     <div>
       <div class="eyebrow">Step 2 of 2 · results of a run</div>
-      <h1>DAG &amp; diff</h1>
-      <p class="muted small">The DAG on top; select a node and its diff opens in the pane below. Settings live on the <a href="config.html">configure page</a>. Diffs: git diffs for code, YAML diffs for config, row-level CSV diffs for data, text diffs for metadata and environment. Select a layer in the Merkle root for the run-level view.</p>
+      <h1>Delta</h1>
+      <p class="muted small">Select a node and its diff opens in the pane below. Settings live on the <a href="config.html">orchestration page</a>. Diffs: git diffs for code, YAML diffs for config, row-level CSV diffs for data, text diffs for metadata and environment. Select a layer in the Merkle root for the run-level view.</p>
     </div>
     <div class="controls">
       <label>Candidate run <select id="scn" aria-label="Scenario"></select></label>
@@ -158,6 +159,11 @@ td.h.new { color: var(--chg); font-weight: 600; }
       </div>
     </div>
   </div>
+
+  <section class="card" aria-labelledby="mr-h">
+    <div class="head"><div><h2 id="mr-h">Merkle root: layer hashes → total hash</h2><p class="small muted">Each layer sha hashes that layer's sha in every node. The total sha hashes the six layer shas. Amber = differs from the baseline.</p></div></div>
+    <div class="root" id="root"></div>
+  </section>
 
   <section class="card" aria-labelledby="dg-h">
     <div class="head">
@@ -180,11 +186,6 @@ td.h.new { color: var(--chg); font-weight: 600; }
     <div class="dagwrap"><svg id="dag" role="img" aria-label="Merkle DAG of the construction pack"></svg></div>
   </section>
 
-  <section class="card" aria-labelledby="mr-h">
-    <div class="head"><div><h2 id="mr-h">Merkle root: layer hashes → total hash</h2><p class="small muted">Each layer sha hashes that layer's sha in every node. The total sha hashes the six layer shas. Amber = differs from the baseline.</p></div></div>
-    <div class="root" id="root"></div>
-  </section>
-
   <aside class="drawer" id="drawer" hidden aria-labelledby="dr-h" aria-live="polite">
     <div class="dr-head"><div><div class="eyebrow" id="dr-k"></div><h2 id="dr-h" class="mono"></h2><p class="small" id="dr-v"></p></div><button type="button" class="x" id="dr-x" aria-label="Close">×</button></div>
     <div class="hashrow" id="dr-hash"></div>
@@ -205,7 +206,7 @@ const PASS = {electricity:{steel:.25, cement_concrete:.15, insulation:.20, paint
 const UP = {}; Object.entries(PASS).forEach(([f, to]) => Object.entries(to).forEach(([t, k]) => (UP[t] = UP[t] || {})[f] = k));
 const WE = {10:.098, 15:.059, 20:0, 25:-.016, 30:-.024};
 const DBN = new Set(["labor_wages_estimation", "equipment_estimation"]);
-const LAYERS = [["code","Code","C"],["config","Config","K"],["data","Data","D"],["meta","Metadata","M"],["env","Environment","E"],["struct","Structure","S"]];
+const LAYERS = [["config","Config","K"],["code","Code","C"],["data","Data","D"],["meta","Metadata","M"],["env","Environment","E"],["struct","Structure","S"]];
 const NL = LAYERS.slice(0, 5);
 
 function H(...parts) { const s = parts.join("|"); let h = 2166136261; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
