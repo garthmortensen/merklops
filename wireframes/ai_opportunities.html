@@ -1,0 +1,300 @@
+<title>AI on the Merkle DAG</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: premise; what the platforms ship; principles; use cases by persona with a filter; value/effort map; an interactive "ask the lineage" mock; agents and the autonomy ladder; MCP tool surface; roadmap; risks. */
+:root {
+  --bg: #f3f4f6; --surface: #ffffff; --fg: #1d2330; --muted: #5d6677; --line: #d9dde4;
+  --accent: #2f4fa8; --accent-soft: #e3e9f8; --chg: #8a5300; --chg-soft: #fbecd0; --ok: #2c6b3a; --ok-soft: #dcefe0; --bad: #a3322a; --bad-soft: #f8dcd9;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif; --f-body: "Inter", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14171d; --surface: #1c2029; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3542; --accent: #8ea8f0; --accent-soft: #232d48;
+  --chg: #f2c37a; --chg-soft: #3d2f17; --ok: #8fd19e; --ok-soft: #1d3424; --bad: #f19a91; --bad-soft: #3e1f1c; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #14171d; --surface: #1c2029; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3542; --accent: #8ea8f0; --accent-soft: #232d48;
+  --chg: #f2c37a; --chg-soft: #3d2f17; --ok: #8fd19e; --ok-soft: #1d3424; --bad: #f19a91; --bad-soft: #3e1f1c; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 56px; }
+.page { max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.7rem; } h2 { font-size: 1.15rem; } h3 { font-size: .95rem; }
+p { margin: 0; } a { color: var(--accent); }
+.mono, code { font-family: var(--f-mono); font-size: .85em; }
+.muted { color: var(--muted); } .small { font-size: .85rem; }
+.eyebrow { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: .72rem; font-weight: 700; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.chg { background: var(--chg-soft); color: var(--chg); } .pill.bad { background: var(--bad-soft); color: var(--bad); }
+.btn { font: 600 .85rem var(--f-body); padding: 7px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--surface); } .btn.ghost { border-color: var(--line); color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+td, th { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.tblwrap { overflow-x: auto; }
+.foot { text-align: center; font-size: .8rem; color: var(--muted); }
+.page { max-width: 1140px; }
+.lead { font-size: 1.05rem; }
+.vendors { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+.vendor { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.vendor ul, .card ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: .88rem; }
+.pattern { background: var(--accent-soft); border-radius: 8px; padding: 10px 14px; font-size: .9rem; }
+.princ { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.pr { border-left: 3px solid var(--accent); padding: 4px 12px; font-size: .88rem; display: grid; gap: 2px; }
+.pr b { font-family: var(--f-display); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filters button { font: 600 .8rem var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.uses { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+.use { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.use .top { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.use h3 { font-size: .95rem; }
+.use .meta { display: flex; flex-wrap: wrap; gap: 4px; }
+.use .io { font-size: .78rem; color: var(--muted); }
+.use .io b { color: var(--fg); font-weight: 600; }
+.lhf { border-color: var(--ok); box-shadow: inset 3px 0 0 var(--ok); }
+.matrix { position: relative; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; min-height: 360px; }
+.quad { border: 1px dashed var(--line); border-radius: 8px; padding: 10px; display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; position: relative; }
+.quad h3 { width: 100%; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.quad.best { background: var(--ok-soft); border-color: transparent; } .quad.best h3 { color: var(--ok); }
+.chip { font: 600 .74rem var(--f-body); padding: 3px 8px; border-radius: 5px; background: var(--surface); border: 1px solid var(--line); cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.axis-y, .axis-x { font-size: .72rem; color: var(--muted); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.chatwrap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { .chatwrap { grid-template-columns: 1fr; } }
+.chat { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 10px; align-content: start; background: var(--bg); min-height: 300px; }
+.msg { border-radius: 8px; padding: 9px 12px; font-size: .88rem; max-width: 95%; }
+.msg.q { background: var(--accent); color: var(--surface); justify-self: end; }
+.msg.a { background: var(--surface); border: 1px solid var(--line); }
+.cite { font: 600 .7rem var(--f-mono); color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 0 4px; white-space: nowrap; }
+.tools { border: 1px solid var(--line); border-radius: 8px; padding: 12px; font: .76rem/1.6 var(--f-mono); background: var(--surface); overflow-x: auto; }
+.tools .t { color: var(--accent); font-weight: 600; } .tools .r { color: var(--muted); } .tools .v { color: var(--ok); }
+.qs { display: flex; flex-wrap: wrap; gap: 6px; }
+.qs button { font: 500 .8rem var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 6px; padding: 5px 10px; cursor: pointer; text-align: left; }
+.qs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.ladder { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 800px) { .ladder { grid-template-columns: 1fr; } }
+.rung { border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; align-content: start; font-size: .84rem; border: 1px solid var(--line); }
+.rung b { font-family: var(--f-display); }
+.rung.l0 { background: var(--ok-soft); } .rung.l1 { background: var(--ok-soft); } .rung.l2 { background: var(--accent-soft); } .rung.l3 { background: var(--chg-soft); } .rung.l4 { background: var(--bad-soft); }
+.agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+.agent { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.agent ol { margin: 0; padding-left: 18px; font-size: .84rem; display: grid; gap: 2px; }
+.agent .human { font-size: .78rem; color: var(--chg); font-weight: 600; }
+pre { margin: 0; font: .76rem/1.55 var(--f-mono); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto; }
+.phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 800px) { .phases { grid-template-columns: 1fr; } }
+.phase { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.sources { font-size: .8rem; color: var(--muted); display: grid; gap: 2px; }
+.backlink { display: inline-block; margin-bottom: 8px; font: 600 .82rem var(--f-body); color: var(--accent); text-decoration: none; }
+.backlink:hover { text-decoration: underline; }
+</style>
+
+<div class="page">
+  <div>
+    <a class="backlink" href="index.html">← All wireframes</a>
+    <div class="eyebrow">Construction pack v0.1.0 · exploration</div>
+    <h1>AI on the Merkle DAG</h1>
+    <p class="muted lead">Language models are good at reading and writing what people currently do by hand: explaining diffs, drafting notes, triaging findings, writing the narrative for leadership. Models are bad at numbers they did not compute, and at being trusted without evidence. The Merkle DAG supplies the evidence: every fact an AI states can be checked against a hash, and every action it proposes runs through the same guardrails as a person's.</p>
+  </div>
+
+  <section class="card" aria-labelledby="v-h">
+    <div><h2 id="v-h">What the orchestration platforms are shipping (November 2026)</h2><p class="small muted">From the vendors' own docs and release notes; the sources are at the foot of the page.</p></div>
+    <div class="vendors">
+      <div class="vendor"><h3>Dagster+ AI (Compass)</h3><ul>
+        <li>Chat over runs, assets and metadata, in the UI, Slack or Teams</li>
+        <li>Root-cause analysis of failed runs from logs, with follow-up questions</li>
+        <li>Proactive monitoring that scans deployments and opens Issues</li>
+        <li>Dispatch a coding agent from an Issue to open a fix PR</li>
+        <li>An MCP server, plus skills for coding agents</li></ul></div>
+      <div class="vendor"><h3>MLflow 3</h3><ul>
+        <li>Tracing of LLM and agent calls as nested spans</li>
+        <li>LLM judges (built-in and custom) and code-based scorers</li>
+        <li>The same judges run online over production traces</li>
+        <li>An AI assistant, dashboards and judge optimization from feedback (3.9)</li></ul></div>
+      <div class="vendor"><h3>Apache Airflow (common-ai provider)</h3><ul>
+        <li>LLM operators: single call, batch, file analysis, branching, SQL</li>
+        <li><code>@task.llm</code> and <code>@task.agent</code> decorators; 20+ model providers</li>
+        <li>An MCP toolset and SQL toolsets for agents</li>
+        <li>Human approval for LLM and agent steps (3.4); an official MCP server is proposed (AIP-91)</li></ul></div>
+    </div>
+    <p class="pattern"><b>The common pattern:</b> a chat that reads the orchestrator's metadata, AI root-cause analysis, proactive issue detection, agents that propose fixes as pull requests, judges that score text, an MCP server so any agent can use the platform's tools, and human approval on anything that acts. All of it fits here, and the Merkle DAG adds what the others lack: per-layer hashes and exact lineage that turn an AI's explanation into something checkable.</p>
+  </section>
+
+  <section class="card" aria-labelledby="p-h">
+    <h2 id="p-h">Design principles</h2>
+    <div class="princ">
+      <div class="pr"><b>Numbers come from tools, never from the model</b><span>The model writes prose with placeholders; values are filled in from the results store. A verifier checks every number in the text against its source.</span></div>
+      <div class="pr"><b>Every claim cites a hash</b><span>"steel_estimation config changed" links to the config sha and the diff. Uncited claims are rejected.</span></div>
+      <div class="pr"><b>Equality and gates stay deterministic</b><span>What changed is decided by sha comparison. AI can explain and rank; it never decides what counts as changed, and it never passes a gate.</span></div>
+      <div class="pr"><b>Agents propose; people sign</b><span>Agents draft run plans, PRs and notes. Sign-off, waiving a warning and release stay human, bound to hashes.</span></div>
+      <div class="pr"><b>AI runs are recorded too</b><span>Model, prompt version, tool calls and outputs go into the run record as observational data (not hashed), so an audit can see what the AI said and why.</span></div>
+      <div class="pr"><b>Evaluate against past audits</b><span>Past findings, returns and sign-offs are a ready-made eval set: did the AI flag what the manager flagged?</span></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="u-h">
+    <div class="head"><div><h2 id="u-h">Use cases</h2><p class="small muted">LLM calls through an API, by persona. <span class="pill ok">low-hanging fruit</span> marks read-only uses that need only data the platform already has.</p></div>
+      <div class="filters" id="ufilt"></div></div>
+    <div class="uses" id="uses"></div>
+  </section>
+
+  <section class="card" aria-labelledby="m-h">
+    <div><h2 id="m-h">Value and effort</h2><p class="small muted">Value is hours saved and errors caught across 20 owners; effort is build plus the controls it needs. Select a use case to find its card above.</p></div>
+    <div style="display:grid; grid-template-columns: 22px 1fr; gap:6px">
+      <div class="axis-y" style="writing-mode: vertical-rl; transform: rotate(180deg); text-align:center">value →</div>
+      <div class="matrix" id="matrix"></div>
+      <div></div><div class="axis-x" style="text-align:center">effort →</div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="c-h">
+    <div><h2 id="c-h">Mock: ask the lineage</h2><p class="small muted">A chat for managers and leadership, grounded in the Merkle DAG through tools. The right pane shows the tool calls behind each answer. Canned answers; no model is called.</p></div>
+    <div class="qs" id="qs"></div>
+    <div class="chatwrap"><div class="chat" id="chat" aria-live="polite"></div><div class="tools" id="tools"></div></div>
+  </section>
+
+  <section class="card" aria-labelledby="a-h">
+    <div><h2 id="a-h">Agents for the program</h2><p class="small muted">Multi-step jobs that today take an owner or a manager hours, done by an agent through the same tools and guardrails, stopping where a person must decide.</p></div>
+    <div class="agents" id="agents"></div>
+    <h3>Autonomy ladder</h3>
+    <div class="ladder">
+      <div class="rung l0"><b>0 · Explain</b><span>Read-only: summaries, Q&A, narratives.</span><span class="small muted">All use cases start here.</span></div>
+      <div class="rung l1"><b>1 · Draft</b><span>Writes run plans, notes, PR descriptions for a person to edit.</span></div>
+      <div class="rung l2"><b>2 · Act in exploratory</b><span>Runs exploratory and sweep runs; never publishable.</span></div>
+      <div class="rung l3"><b>3 · Propose to production</b><span>Opens PRs and candidate runs; CODEOWNERS and gates apply.</span></div>
+      <div class="rung l4"><b>Never</b><span>Sign off, waive a warning, accept a failure, release, edit the manifest directly.</span></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="t-h">
+    <div><h2 id="t-h">The tool surface: an MCP server for the Merkle DAG</h2><p class="small muted">One server exposes the platform to any agent (Claude, coding agents, Slack bots), with each tool tagged by the autonomy rung it needs.</p></div>
+<pre>read (rung 0)                                  write (rung 1–3, policy-checked)
+  get_run(run_id)          → run record          validate_plan(plan_yaml)    → errors, impact set
+  trace(node, run_a, run_b)→ root causes, edges  draft_run_plan(intent)      → plan_yaml (rung 1)
+  diff(node, layer, a, b)  → git / YAML / CSV    start_run(plan, tier)       → exploratory only at rung 2
+  impact_set(change)       → descendant nodes    open_pr(repo, branch, diff) → rung 3, CODEOWNERS
+  findings(run_id)         → guardrail results   comment(finding_id, text)   → rung 1
+  results_query(spec)      → rows + output shas  notify(owner, task)         → rung 1
+  manifest(cycle)          → pins, vintages
+  history(node, n)         → past params, values, sign-offs</pre>
+  </section>
+
+  <section class="card" aria-labelledby="r-h">
+    <h2 id="r-h">A phased start</h2>
+    <div class="phases">
+      <div class="phase"><span class="pill ok">Phase 1 · weeks 1–6</span><b>Explain (read-only)</b><ul><li>Diff explainer and intent drafter</li><li>Story narrative draft with citations</li><li>Finding triage and return-to-owner drafts</li><li>Dashboard commentary with a number verifier</li></ul><span class="small muted">Needs: an LLM API key, the read tools, the eval set from past audits.</span></div>
+      <div class="phase"><span class="pill">Phase 2 · weeks 6–14</span><b>Copilots and the MCP server</b><ul><li>Run-plan copilot (natural language → validated plan)</li><li>Ask the lineage (managers, leadership)</li><li>Failure triage for runs</li><li>Consistency judge on intent notes</li></ul><span class="small muted">Needs: the MCP server, tracing of AI calls into run records.</span></div>
+      <div class="phase"><span class="pill chg">Phase 3 · quarter 2</span><b>Agents with approvals</b><ul><li>Upstream cascade agent</li><li>Data refresh agent</li><li>Guardrail fix-PR agent</li><li>Sweep agent; release packet agent</li></ul><span class="small muted">Needs: write tools behind the autonomy policy, human approval steps.</span></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="k-h">
+    <h2 id="k-h">Risks and controls</h2>
+    <div class="tblwrap"><table>
+      <tr><th>Risk</th><th>Control</th></tr>
+      <tr><td>A fabricated or wrong number in a narrative reaches the CEO</td><td>Numbers only through placeholders filled from the results store; a verifier re-reads every number and its output sha; failing text is blocked.</td></tr>
+      <tr><td>A confident but wrong explanation of a delta</td><td>Explanations must cite the trace (root-cause nodes and layers from sha comparison); a judge checks the explanation against the diff; the human signs.</td></tr>
+      <tr><td>An agent changes production</td><td>The autonomy ladder enforced in the MCP server: production writes only as PRs through CODEOWNERS and the release gate.</td></tr>
+      <tr><td>Automation bias: reviewers stop looking</td><td>The audit shows the AI's ranking next to the raw findings; sampled spot checks; disagreements tracked as an eval metric.</td></tr>
+      <tr><td>Cost and latency at 20 owners × 40 runs</td><td>Batch calls for nightly summaries, prompt caching for the shared pack context, and a small model for routing and triage.</td></tr>
+      <tr><td>Reproducibility of AI output</td><td>AI output is observational, never an input to a node's hash; model and prompt versions are recorded with each output.</td></tr>
+    </table></div>
+  </section>
+
+  <section class="card" aria-labelledby="s-h">
+    <h2 id="s-h">Sources</h2>
+    <div class="sources">
+      <a href="https://docs.dagster.io/guides/labs/dagster-ai">Dagster+ AI docs</a>
+      <a href="https://docs.dagster.io/guides/labs/compass-ai-assistant">Dagster Compass AI assistant</a>
+      <a href="https://compass.dagster.io/dagster-compass">Diagnose data platform issues with the Dagster+ AI agent</a>
+      <a href="https://mlflow.org/releases/3.9.0/">MLflow 3.9.0 highlights: AI assistant, dashboards, judge optimization</a>
+      <a href="https://docs.databricks.com/aws/en/mlflow3/genai/">MLflow 3 for GenAI (Databricks docs)</a>
+      <a href="https://airflow.apache.org/blog/common-ai-provider/">Airflow common-ai provider</a>
+      <a href="https://airflow.apache.org/blog/airflow-3.4.0/">Apache Airflow 3.4.0: task loops, Dags in any language, AI agents</a>
+      <a href="https://cwiki.apache.org/confluence/spaces/AIRFLOW/pages/364349979/AIP-91+-+Airflow+MCP+Server+Phase+1+-+Read-only+actions">AIP-91: Airflow MCP server (proposal)</a>
+    </div>
+  </section>
+
+  <p class="foot">Exploration · wireframe · no model is called on this page</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+// [id, persona, title, what, inputs, output, lhf, value 1-3, effort 1-3, where]
+const USES = [
+  ["diffx", "modeler", "Diff explainer", "Turns a git diff, a YAML diff or a CSV row diff into two plain sentences: what changed and what it does.", "diff(node, layer)", "summary with citations", true, 3, 1, "Merkle DAG diff, every layer pill"],
+  ["intent", "modeler", "Intent drafter", "Drafts the declared intent for a run plan from the edits made in the delta setter, including the expected impact set.", "run plan, impact_set", "intent note for the owner to edit", true, 3, 1, "Delta setter, on submit"],
+  ["plan", "modeler", "Run-plan copilot", "\"Rerun steel with drift windows 10 to 25 as a sweep, Q4 data\" becomes a run plan, validated against the pack's typed parameters before anyone runs it.", "manifest, parameter schemas", "plan YAML + validation result", false, 3, 2, "Delta setter"],
+  ["triage", "modeler", "Failure triage", "When a node fails, reads its log, the traceback and the node's recent diffs, and proposes the likely cause and a fix, Dagster-style.", "logs, diff, history", "cause + suggested fix", false, 2, 2, "Run log"],
+  ["coderev", "modeler", "Node contract review", "Reviews a feature branch against the node contract: reads only declared inputs, no network or clock, deterministic, writes declared outputs.", "git diff, node contract", "PR review comments", false, 2, 2, "Feature branch CI"],
+  ["story", "reviewer", "Story narrative draft", "Writes the run lineage story's chapters from the run record and the trace; every sentence links to the hash it rests on.", "get_run, trace, diff", "story draft with citations", true, 3, 1, "Run lineage story"],
+  ["ftri", "reviewer", "Finding triage", "Ranks the audit's guardrail findings, groups related ones (paint excluded + electricity changed), and drafts the return-to-owner message.", "findings, trace", "ranked list + draft messages", true, 3, 1, "Release audit"],
+  ["judge", "reviewer", "Consistency judge", "An LLM judge, MLflow-style, asks: does the owner's explanation match the diff and the effect? Flags \"no change expected\" with a changed output.", "intent, diffs, effect", "score + rationale", false, 2, 2, "Release audit · intent vs effect"],
+  ["ask", "reviewer", "Ask the lineage", "Questions in plain language (\"why did cost_index move 1.4%?\"), answered through trace and diff tools with citations. See the mock below.", "MCP read tools", "answer + tool trace", false, 3, 2, "Every page, as a side panel"],
+  ["exec", "leadership", "Dashboard commentary", "Three sentences per dashboard for leadership: the headline change, its main driver, any definition change. Numbers fill in from the store and are verified.", "results_query, contribution", "commentary with verified numbers", true, 3, 1, "Results dashboards"],
+  ["nlq", "leadership", "Ask the dashboard", "Natural language to a query over the results store through a fixed semantic layer (outputs, runs, years), not free SQL.", "results_query", "chart or table", false, 2, 2, "Results dashboards"],
+  ["brief", "leadership", "CEO briefing pack", "Assembles the released run's dashboards, commentary and the audit summary into a two-page brief.", "released run, audit", "brief document", false, 2, 2, "After the release gate"],
+];
+const PERS = [["all", "All"], ["modeler", "Modeler"], ["reviewer", "Reviewer and manager"], ["leadership", "Dashboards and leadership"], ["lhf", "Low-hanging fruit"]];
+let pf = "all";
+function renderUses() {
+  $("ufilt").innerHTML = PERS.map(([k, t]) => `<button type="button" data-k="${k}" aria-pressed="${pf === k}">${t}</button>`).join("");
+  $("ufilt").querySelectorAll("button").forEach(b => b.onclick = () => { pf = b.dataset.k; renderUses(); });
+  const lv = n => ["", "low", "medium", "high"][n];
+  $("uses").innerHTML = USES.filter(u => pf === "all" || (pf === "lhf" ? u[6] : u[1] === pf)).map(u => `<div class="use${u[6] ? " lhf" : ""}" id="u-${u[0]}"><div class="top"><h3>${u[2]}</h3>${u[6] ? '<span class="pill ok">low-hanging fruit</span>' : ""}</div>
+    <div class="meta"><span class="pill">${u[1]}</span><span class="pill">value ${lv(u[7])}</span><span class="pill">effort ${lv(u[8])}</span></div>
+    <p class="small">${u[3]}</p><span class="io"><b>Reads</b> ${u[4]} · <b>Returns</b> ${u[5]} · <b>Lives in</b> ${u[9]}</span></div>`).join("");
+}
+function renderMatrix() {
+  const q = (hv, he) => USES.filter(u => (u[7] >= 3) === hv && (u[8] <= 1) === he);
+  const quad = (title, hv, he, cls) => `<div class="quad ${cls || ""}"><h3>${title}</h3>${q(hv, he).map(u => `<button type="button" class="chip" data-u="${u[0]}">${u[2]}</button>`).join("")}</div>`;
+  $("matrix").innerHTML = quad("High value · low effort: start here", true, true, "best") + quad("High value · more effort: phase 2", true, false) + quad("Lower value · low effort", false, true) + quad("Lower value · more effort: later", false, false);
+  $("matrix").querySelectorAll(".chip").forEach(c => c.onclick = () => { pf = "all"; renderUses(); const el = $("u-" + c.dataset.u); el.scrollIntoView({behavior:"smooth", block:"center"}); el.style.outline = "2px solid var(--accent)"; setTimeout(() => el.style.outline = "", 1600); });
+}
+// ask the lineage mock
+const QA = [
+  ["Why did cost_index 2030 move in run 123?", [
+    ["trace", "cost_index, run 122 → run 123", "1 root cause: steel_estimation · config"],
+    ["diff", "steel_estimation, config", "params.drift_window 20 → 15 · 94% similar"],
+    ["results_query", "steel_projection, cost_index, 2030", "161.4 → 170.9 · 148.2 → 150.0"]],
+    `cost_index 2030 rose from <b>148.2</b> to <b>150.0</b> (+1.2%) <span class="cite">out 650b9e9</span>. The only root cause is a config change in steel_estimation: its drift window went from 20 to 15 years <span class="cite">cfg d8a5245</span>. That raised steel's 2030 forecast by 5.9% <span class="cite">out 75b5ba1</span>, which carries into the equal-weighted index. No other model's inputs changed; 26 nodes were cache hits.`],
+  ["Did anything change that nobody declared?", [
+    ["findings", "run 131", "9 findings · 3 fail · 3 warn"],
+    ["get_run", "run 131 intents", "4 declared changes"],
+    ["impact_set", "each declared change", "expected sets for 4 owners"]],
+    `Yes, one. The labor owner declared "no change expected", but labor_wages_estimation's output changed <span class="cite">out 16d2970</span>, and with it labor_wages_projection, equipment_projection and cost_index. The environment layer explains it: the run used psqlODBC 17 instead of the release image's 16 <span class="cite">env 202a1f9</span>. Recommend: return to owner and rerun in the release image (finding 5).`],
+  ["Which models would move if electricity is reparameterized?", [
+    ["impact_set", "electricity_estimation · config", "7 nodes"],
+    ["manifest", "2026Q4 passthrough prior", "electricity → steel .25, cement .15, insulation .20, paint .10"]],
+    `Seven nodes: electricity_estimation and _projection, the projections of steel, cement_concrete, insulation and paint_coatings, and cost_index <span class="cite">graph 0387d34</span>. Steel is most exposed (pass-through 0.25). Note: insulation_projection currently pins electricity's prices @baseline_a, so it would <i>not</i> move unless the pin is switched to live.`],
+  ["Summarize run 124 for the CEO in three sentences.", [
+    ["results_query", "cost_index 2030, runs 122 · 124", "148.2 · 150.2"],
+    ["trace", "run 122 → run 124", "steel config; structure +asphalt"],
+    ["verify_numbers", "draft", "3 of 3 numbers match the store"]],
+    `Construction costs are forecast to rise to <b>150.2</b> in 2030, <b>1.4%</b> above the last signed-off forecast <span class="cite">out d56582f</span>. Most of the change comes from a faster steel price trend; the rest from adding asphalt to the index, which changes the index's definition. The run is awaiting review and is not yet signed off.`],
+];
+let qi = 0;
+function renderQA() {
+  $("qs").innerHTML = QA.map((q, i) => `<button type="button" data-i="${i}" aria-pressed="${i === qi}">${q[0]}</button>`).join("");
+  $("qs").querySelectorAll("button").forEach(b => b.onclick = () => { qi = +b.dataset.i; renderQA(); });
+  const [q, calls, a] = QA[qi];
+  $("chat").innerHTML = `<div class="msg q">${q}</div><div class="msg a">${a}</div><span class="small muted">Every <span class="cite">cite</span> links to the hash in the Merkle DAG diff. Numbers were filled from the results store, not generated.</span>`;
+  $("tools").innerHTML = `<div class="r"># tool calls (MCP, read-only, rung 0)</div>` + calls.map(([t, arg, r]) => `<div><span class="t">${t}</span>(${arg})</div><div class="r">  → ${r}</div>`).join("") + `<div class="v">✓ every number verified against its output sha</div>`;
+}
+// agents
+const AGENTS = [
+  ["Upstream cascade agent", "When an upstream owner signs off a new output hash.", ["Compute the impact set from the lineage graph", "Run it as a candidate, with cache", "Diff every affected node; draft a per-owner summary", "Open a review task for each downstream owner"], "Owners re-sign their nodes", 2],
+  ["Data refresh agent", "When the data calendar says a source is due.", ["Fetch due sources; report \"no change\" when the data hash is equal", "Summarize row-level revisions per series", "Open a PR tagging the vintage and bumping the manifest"], "Platform owner merges the PR", 3],
+  ["Guardrail fix agent", "When the audit raises a fixable finding (drift_window = 2, floating ref, wrong vintage).", ["Read the finding, the history of that parameter and the manifest", "Propose the fix with its reason (\"last 6 releases used 20\")", "Open a PR to the owner's node file; start a candidate run"], "Owner approves; the gate re-checks", 3],
+  ["Sweep agent", "When an owner asks to explore a parameter.", ["Expand the range into variants within the declared bounds", "Run them as one exploratory sweep", "Report the effect on the model and on cost_index; flag unstable settings"], "Owner picks a variant to promote", 2],
+  ["Release packet agent", "During the last week of the cycle.", ["Watch the cycle board; nudge owners with open items", "Assemble the audit packet: findings, ranked; stories; tie-out", "Draft the release notes and the CEO brief"], "Manager decides and releases", 1],
+  ["Run doctor", "When a run fails or the invariant check trips.", ["Read logs, diffs, environment layer", "Find the unhashed input leaking (the invariant check's purpose)", "Propose moving it into a hashed tier, as a PR"], "Platform owner reviews", 3],
+];
+$("agents").innerHTML = AGENTS.map(([n, w, steps, h, r]) => `<div class="agent"><div class="head" style="align-items:start"><h3>${n}</h3><span class="pill ${r === 1 ? "ok" : r === 2 ? "" : "chg"}">rung ${r}</span></div><p class="small muted">Trigger: ${w}</p><ol>${steps.map(s => `<li>${s}</li>`).join("")}</ol><span class="human">Stops for a person: ${h}</span></div>`).join("");
+renderUses(); renderMatrix(); renderQA();
+</script>

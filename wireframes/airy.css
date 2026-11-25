@@ -1,0 +1,24 @@
+/* Shared "Airy" dark style: calm surfaces, numbered cards, minimal text. */
+:root, :root[data-theme="light"], :root[data-theme="dark"] {
+  --bg:#111318; --surface:#181b22; --fg:#e6e9ef; --muted:#9aa3b4; --line:#262b36; --accent:#9db4ff; --accent-soft:#1f2740;
+  --chg:#f2c37a; --chg-soft:#3d2f17; --ok:#8fd19e; --ok-soft:#1d3424; --bad:#f19a91; --bad-soft:#3e1f1c; color-scheme: dark; }
+body { counter-reset: step; font-size: 16px; }
+.page { max-width: 980px; gap: 28px; }
+h1 { font-size: 2.2rem; letter-spacing: -.01em; } h2 { font-size: 1.35rem; }
+.page > .card, .page > .drawer, .cards > .card {
+  counter-increment: step; position: relative; border: 0; border-radius: 16px; padding: 28px 28px 28px 84px; gap: 18px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.03), 0 8px 24px rgba(0,0,0,.25); background: var(--surface); }
+.page > .card::before, .page > .drawer::before, .cards > .card::before {
+  content: counter(step); position: absolute; left: 26px; top: 26px; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font: 700 1.05rem var(--f-display); }
+.page > .card:hover::before, a.card:hover::before { background: var(--accent); color: var(--bg); }
+/* less text */
+.card p.small.muted, .head p.muted, .k small, .res, .file span, .scope, .eyebrow, .foot, .hashrow + .note { display: none !important; }
+.kv { row-gap: 12px; }
+.kv .file { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border: 0; padding-top: 18px; }
+.kv .hd { font-size: .7rem; opacity: .6; }
+select, input[type=text], .val { border-radius: 10px !important; padding: 10px 12px !important; }
+.val, .ro { background: transparent !important; border: 1px dashed var(--line) !important; opacity: .7; }
+.btn { border-radius: 999px; padding: 10px 20px; }
+.runrow { border: 0; border-radius: 10px; }
+@media (max-width: 700px) { .page > .card, .page > .drawer, .cards > .card { padding: 72px 20px 24px; } }

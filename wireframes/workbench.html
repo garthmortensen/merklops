@@ -1,4 +1,4 @@
-<title>Model Workbench</title>
+<title>Run Workbench</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -67,7 +67,7 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: 
 .why { background: var(--accent-soft); border-radius: 6px; padding: 10px 12px; font-size: .92rem; }
 .preview { border: 1px dashed var(--chg); border-radius: 6px; padding: 10px 12px; font-size: .9rem; color: var(--chg); background: var(--chg-soft); }
 .dagwrap { overflow-x: auto; }
-.dag { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 6px 14px; min-width: 640px; }
+.dag { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 6px 14px; min-width: 720px; }
 .colhead { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding-bottom: 2px; }
 .node { font: 500 .78rem var(--f-mono); text-align: left; padding: 6px 8px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; display: flex; justify-content: space-between; gap: 6px; }
 .node .s { color: var(--muted); font-family: var(--f-body); font-size: .7rem; }
@@ -80,6 +80,21 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: 
 .node.index { grid-row: 2 / span 10; align-self: center; }
 @keyframes pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .node.running { animation: none; } .bar span { transition: none; } }
+.node { flex-direction: column; align-items: stretch; gap: 4px; }
+.node .top { display: flex; justify-content: space-between; gap: 6px; }
+.lstrip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+.lc { font: 600 .6rem var(--f-body); text-align: center; padding: 1px 0; border-radius: 3px; background: var(--bg); color: var(--muted); border: 1px solid transparent; }
+.lc.flow { background: var(--chg-soft); color: var(--chg); }
+.lc.own { background: var(--chg); color: var(--surface); }
+.lc.na { opacity: .35; background: transparent; border: 1px dashed var(--line); }
+.node.changed .lc:not(.flow):not(.own):not(.na) { background: var(--surface); }
+.node.dim { opacity: .3; }
+.layer { cursor: pointer; border: 2px solid transparent; font: inherit; font-size: .75rem; font-weight: 600; }
+.layer[aria-pressed="true"] { border-color: var(--accent); }
+.wins { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.wins .field { gap: 2px; } .wins .val, .wins select { min-height: 32px; padding: 4px 8px; }
+.ltable td:nth-child(2), .ltable td:nth-child(3) { font-family: var(--f-mono); font-size: .78rem; }
+.ltable td:last-child { text-align: left; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--muted); }
 .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; border: 1px solid var(--line); background: var(--surface); }
 .legend .l-rec::before { border-color: var(--accent); }
@@ -93,37 +108,45 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: 
 .sent { background: var(--ok-soft); color: var(--ok); border-radius: 6px; padding: 10px 12px; font-size: .9rem; }
 .sent a { color: inherit; font-weight: 600; }
 .foot { text-align: center; font-size: .8rem; color: var(--muted); }
+.scope { font-size: .65rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 700; color: var(--accent); }
+.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); padding-bottom: 0; scrollbar-width: thin; }
+.tab { font: 500 .75rem var(--f-mono); padding: 6px 9px; border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; background: none; color: var(--muted); cursor: pointer; white-space: nowrap; position: relative; top: 1px; }
+.tab[aria-selected="true"] { background: var(--surface); border-color: var(--line); color: var(--fg); font-weight: 600; }
+.tab.dirty::after { content: "●"; color: var(--chg); margin-left: 4px; }
+.tabpanel { display: grid; gap: 10px; }
+.globalband { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); font-size: .82rem; }
+.gchip { display: inline-flex; gap: 6px; align-items: center; padding: 3px 10px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); font-weight: 600; cursor: pointer; border: 2px solid transparent; font-family: var(--f-body); font-size: .78rem; }
+.gchip.own { background: var(--chg); color: var(--surface); }
+.gchip[aria-pressed="true"] { border-color: var(--accent); }
+.lstrip { grid-template-columns: repeat(3, 1fr); }
+.pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pm-grid > div { display: grid; gap: 10px; align-content: start; }
+@media (max-width: 700px) { .pm-grid { grid-template-columns: 1fr; } }
+.node.modelsel { box-shadow: inset 3px 0 0 var(--accent); }
+.backlink { display: inline-block; margin-bottom: 8px; font: 600 .82rem var(--f-body); color: var(--accent); text-decoration: none; }
+.backlink:hover { text-decoration: underline; }
 </style>
 
 <div class="page">
   <div class="head">
     <div>
+      <a class="backlink" href="index.html">← All wireframes</a>
       <div class="eyebrow">Construction pack · model builder</div>
-      <h1>Workbench</h1>
-      <p class="muted small">Change the candidate on the right and run it. The middle compares it with the baseline as nodes finish.</p>
+      <h1>Run workbench</h1>
+      <p class="muted small">Global settings sit in the baseline and candidate cards; each model's code, config and data have their own card below. Change the candidate and run it.</p>
     </div>
     <span class="pill" id="status">run 123 · finished</span>
   </div>
 
   <div class="split">
-    <!-- Baseline -->
     <section class="card" aria-labelledby="b-h">
       <div><div class="eyebrow">Baseline</div><h2 id="b-h">run 122</h2><p class="small muted">18 Nov · signed off by the reviewer</p></div>
-      <div class="group">
-        <div class="field"><span class="lbl">Data vintage</span><div class="val">v2026-03</div></div>
-        <div class="field"><span class="lbl">Jump-off year</span><div class="val">2025</div></div>
-        <div class="field"><span class="lbl">model_lib</span><div class="val">v0.3.1</div></div>
-      </div>
-      <div class="group">
-        <div class="field"><span class="lbl">steel_estimation · drift window (years)</span><div class="val">20</div></div>
-        <div class="field"><span class="lbl">electricity_estimation · drift window (years)</span><div class="val">20</div></div>
-      </div>
+      <div class="group" id="b-global"></div>
       <div class="group"><div class="field"><span class="lbl">cost_index, 2030</span><div class="val mono">148.2</div></div></div>
     </section>
 
-    <!-- Difference -->
     <section class="card mid" aria-labelledby="d-h" aria-live="polite">
-      <div class="eyebrow" id="d-h">Difference from baseline</div>
+      <div class="eyebrow" id="d-h">Diff against baseline · hash comparison</div>
       <div class="preview" id="preview" hidden></div>
       <div id="result">
         <div class="small muted">cost_index, 2030</div>
@@ -131,26 +154,19 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: 
       </div>
       <div class="layers" id="r-layers"></div>
       <div class="why" id="r-why"></div>
-      <div><h3>Root causes</h3><table id="r-roots"></table></div>
+      <div><h3>Root causes (lineage trace)</h3><table id="r-roots"></table></div>
       <div><h3>What moved, 2030</h3><table id="r-moved"></table></div>
     </section>
 
-    <!-- Candidate -->
     <section class="card" aria-labelledby="c-h">
       <div><div class="eyebrow">Candidate</div><h2 id="c-h">run 123</h2><p class="small muted" id="c-sub">Run plan, saved outside git</p></div>
       <div class="group">
-        <div class="field" id="f-vintage"><label for="i-vintage">Data vintage</label>
-          <select id="i-vintage"><option>v2026-03</option><option>v2026-01</option></select></div>
-        <div class="field" id="f-jump"><label for="i-jump">Jump-off year</label>
+        <div class="scope">Global · all models</div>
+        <div class="field" id="f-jump"><label for="i-jump">Metadata · jump-off year</label>
           <select id="i-jump"><option>2025</option><option>2024</option></select></div>
-        <div class="field" id="f-lib"><label for="i-lib">model_lib</label>
-          <select id="i-lib"><option>v0.3.1</option><option>v0.3.2</option><option>v0.4.0</option></select></div>
-      </div>
-      <div class="group">
-        <div class="field" id="f-steel"><label for="i-steel">steel_estimation · drift window (years)</label>
-          <select id="i-steel"><option>10</option><option selected>15</option><option>20</option><option>25</option><option>30</option></select></div>
-        <div class="field" id="f-elec"><label for="i-elec">electricity_estimation · drift window (years)</label>
-          <select id="i-elec"><option>10</option><option>15</option><option selected>20</option><option>25</option><option>30</option></select></div>
+        <div class="field" id="f-region"><label for="i-region">Metadata · region (not read by any node)</label>
+          <select id="i-region"><option>US national</option><option>US Midwest</option></select></div>
+        <div class="field"><span class="lbl">Structure · graph.yaml + orchestration.yml</span><div class="val small" id="c-struct">generated from the pins below</div></div>
       </div>
       <div class="group">
         <div class="bar" aria-hidden="true"><span id="bar"></span></div>
@@ -165,17 +181,30 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: 
     </section>
   </div>
 
+  <section class="card" aria-labelledby="pm-h">
+    <div class="head">
+      <div><div class="scope">Per model · code, config, data</div><h2 id="pm-h">Models</h2><p class="small muted">Each model has its own code, config and data. Pick a model to compare and edit it; a dot marks models changed in the candidate.</p></div>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="pm-grid">
+      <div class="tabpanel"><div class="eyebrow" id="b-mh">Baseline · run 122</div><div class="tabpanel" id="b-model"></div></div>
+      <div class="tabpanel"><div class="eyebrow" id="c-mh">Candidate</div><div class="tabpanel" id="c-model" role="tabpanel"></div></div>
+    </div>
+  </section>
+
   <section class="card" aria-labelledby="g-h">
     <div class="head">
-      <div><h2 id="g-h">The DAG</h2><p class="small muted">29 nodes. Select one to see what happened to it.</p></div>
+      <div><h2 id="g-h">Merkle DAG</h2><p class="small muted">29 nodes. Select a node to see its layer shas and deltas.</p></div>
       <div class="legend"><span>from cache</span><span class="l-rec">recomputed, same output</span><span class="l-chg">output changed</span><span class="l-root">root cause</span></div>
     </div>
+    <div class="globalband" id="gband"></div>
+    <p class="small muted">Each node shows its own layers: <b>C</b>ode · <b>K</b> config · <b>D</b>ata. Solid = its own input changed; soft = changed via upstream; dashed = not used. Metadata and structure are global, shown once above. Click a layer tile or a global chip to filter.</p>
     <div class="dagwrap"><div class="dag" id="dag"></div></div>
     <div class="nodedetail" id="nodedetail"></div>
   </section>
 
   <section class="card" aria-labelledby="h-h">
-    <h2 id="h-h">Runs</h2>
+    <h2 id="h-h">Run log</h2>
     <div class="history" id="history"></div>
   </section>
 
@@ -185,124 +214,203 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: 
 <script>
 const MODELS = ["electricity","diesel_fuel","steel","cement_concrete","lumber","insulation","paint_coatings","labor_wages","equipment"];
 const BASE30 = {electricity:152.3, diesel_fuel:158.8, steel:161.4, cement_concrete:149.0, lumber:139.5, insulation:146.2, paint_coatings:143.7, labor_wages:151.9, equipment:141.0};
+const SENS = {electricity:.8, diesel_fuel:.9, steel:1, cement_concrete:.6, lumber:1.1, insulation:.7, paint_coatings:.5, labor_wages:.4, equipment:.6};
+const REVISION = {electricity:.002, diesel_fuel:-.003, steel:-.008, cement_concrete:0, lumber:-.011, insulation:0, paint_coatings:.001, labor_wages:-.002, equipment:0};
 const ELEC_TO = {steel:.25, cement_concrete:.15, insulation:.20, paint_coatings:.10};
 const WINDOW_EFFECT = {10:.098, 15:.059, 20:0, 25:-.016, 30:-.024};
-const BASELINE = {vintage:"v2026-03", jump:"2025", lib:"v0.3.1", steel:"20", elec:"20"};
+const REF = m => [sha(m + "r1"), sha(m + "r2")];
 const COST_BASE = 148.2;
+const LAYERS = [["code","Code","C","per model"],["config","Config","K","per model"],["data","Data","D","per model"],["meta","Metadata","M","global"],["struct","Structure","S","global"]];
+const NODE_LAYERS = LAYERS.slice(0, 3);
 const $ = id => document.getElementById(id);
-const inputs = {vintage:$("i-vintage"), jump:$("i-jump"), lib:$("i-lib"), steel:$("i-steel"), elec:$("i-elec")};
-const fields = {vintage:"f-vintage", jump:"f-jump", lib:"f-lib", steel:"f-steel", elec:"f-elec"};
-const read = () => Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.value]));
+function sha(s) { let h = 2166136261; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return (h >>> 0).toString(16).padStart(8, "0").slice(0, 7); }
+const clone = o => JSON.parse(JSON.stringify(o));
 
-// Fake engine: which nodes recompute, which outputs change, and by how much.
-function evaluate(c) {
-  const rec = new Set(), roots = [], pct = Object.fromEntries(MODELS.map(m => [m, 0]));
-  const layers = {code:false, config:false, data:false, meta:false, struct:false};
-  const all = (kind) => MODELS.forEach(m => rec.add(m + "_" + kind));
-  if (c.steel !== BASELINE.steel) {
-    layers.config = true; roots.push(["steel_estimation", "config", `drift window ${BASELINE.steel} → ${c.steel}`]);
-    rec.add("steel_estimation"); rec.add("steel_projection"); pct.steel += WINDOW_EFFECT[c.steel];
-  }
-  if (c.elec !== BASELINE.elec) {
-    layers.config = true; roots.push(["electricity_estimation", "config", `drift window ${BASELINE.elec} → ${c.elec}`]);
-    rec.add("electricity_estimation"); rec.add("electricity_projection");
-    const e = WINDOW_EFFECT[c.elec] * .8; pct.electricity += e;
-    Object.entries(ELEC_TO).forEach(([m, b]) => { rec.add(m + "_projection"); pct[m] += b * e; });
-  }
-  if (c.jump !== BASELINE.jump) {
-    layers.meta = true; roots.push(["metadata", "metadata", `jump-off year ${BASELINE.jump} → ${c.jump}`]);
-    all("estimation"); all("projection"); MODELS.forEach(m => pct[m] -= .006);
-  }
-  if (c.lib !== BASELINE.lib) {
-    layers.code = true; roots.push(["model_lib", "code", `${BASELINE.lib} → ${c.lib}`]);
-    all("estimation"); all("projection"); rec.add("cost_index");
-    if (c.lib === "v0.4.0") MODELS.forEach(m => pct[m] += .001);
-  }
-  if (c.vintage !== BASELINE.vintage) {
-    layers.data = true; layers.struct = true; roots.push(["steel_raw, lumber_raw", "data", `vintage ${BASELINE.vintage} → ${c.vintage} (2 series revised)`]);
-    ["steel", "lumber"].forEach(m => { rec.add(m + "_raw"); rec.add(m + "_estimation"); rec.add(m + "_projection"); });
-    pct.steel -= .008; pct.lumber -= .011;
-  }
-  const changedModels = MODELS.filter(m => Math.abs(pct[m]) > 1e-9);
-  const costPct = MODELS.reduce((s, m) => s + pct[m], 0) / MODELS.length * 1.83;
-  if (rec.size) rec.add("cost_index");
-  const changed = new Set();
-  changedModels.forEach(m => { changed.add(m + "_projection"); changed.add(m + "_estimation"); });
-  if (c.vintage !== BASELINE.vintage) { changed.add("steel_raw"); changed.add("lumber_raw"); }
-  // electricity changes leak into downstream projections only, not their estimations
-  Object.keys(ELEC_TO).forEach(m => { if (c.elec !== BASELINE.elec && c.steel === BASELINE.steel && c.jump === BASELINE.jump && c.vintage === BASELINE.vintage) changed.delete(m + "_estimation"); });
-  if (c.steel !== BASELINE.steel && c.elec === BASELINE.elec && c.jump === BASELINE.jump) changed.add("steel_estimation");
-  if (Math.abs(costPct) > 1e-9) changed.add("cost_index");
-  if (changed.size) layers.data = true;
-  const rootNodes = new Set();
-  if (c.steel !== BASELINE.steel) rootNodes.add("steel_estimation");
-  if (c.elec !== BASELINE.elec) rootNodes.add("electricity_estimation");
-  if (c.vintage !== BASELINE.vintage) { rootNodes.add("steel_raw"); rootNodes.add("lumber_raw"); }
-  return {rec, changed, rootNodes, roots, pct, costPct, layers};
+const BASELINE = {jump:"2025", region:"US national", lib:"v0.3.1",
+  models:Object.fromEntries(MODELS.map(m => [m, {code:REF(m)[0], lib:"v0.3.1", win:"20", vintage:"v2026-03"}]))};
+let cand = clone(BASELINE); cand.models.steel.win = "15";
+let tab = "steel";
+
+// ---------- candidate inputs ----------
+const inputsGlobal = {jump:$("i-jump"), region:$("i-region")};
+Object.entries(inputsGlobal).forEach(([k, el]) => el.addEventListener("change", () => { cand[k] = el.value; $("sent").hidden = true; onEdit(); }));
+function renderTabs() {
+  $("tabs").innerHTML = MODELS.map(m => `<button type="button" role="tab" class="tab${JSON.stringify(cand.models[m]) !== JSON.stringify(BASELINE.models[m]) ? " dirty" : ""}" aria-selected="${m === tab}" data-m="${m}">${m}</button>`).join("");
+  $("tabs").querySelectorAll(".tab").forEach(b => b.onclick = () => setTab(b.dataset.m));
 }
+function setTab(m) {
+  tab = m; renderTabs(); renderModelPanels(); paintDag(state.result);
+  const t = $("tabs").querySelector(`[data-m="${m}"]`); if (t) t.scrollIntoView({block:"nearest", inline:"nearest"});
+}
+function sel(id, k, opts, cur, label, edited) {
+  return `<div class="field${edited ? " edited" : ""}"><label for="${id}">${label}</label><select id="${id}" data-k="${k}">${opts.map(([v, t]) => `<option value="${v}"${v === cur ? " selected" : ""}>${t}</option>`).join("")}</select></div>`;
+}
+const ro = (label, v) => `<div class="field"><span class="lbl">${label}</span><div class="val mono">${v}</div></div>`;
+function renderModelPanels() {
+  const m = tab, b = BASELINE.models[m], c = cand.models[m], [r1, r2] = REF(m);
+  $("b-mh").textContent = `Baseline · run 122 · ${m}`;
+  $("c-mh").textContent = `Candidate · ${m}`;
+  $("b-model").innerHTML = ro("Code · " + m + " repo", b.code + " (main)") + ro("Code · model_lib", b.lib) + ro("Config · drift window (years)", b.win) + ro("Data · vintage", b.vintage);
+  $("c-model").innerHTML =
+    sel("i-code", "code", [[r1, r1 + " (main)"], [r2, r2 + " (feature/robust-se)"]], c.code, `Code · ${m} repo`, c.code !== b.code) +
+    sel("i-lib", "lib", [["v0.3.1","v0.3.1"],["v0.3.2","v0.3.2"],["v0.4.0","v0.4.0"]], c.lib, "Code · model_lib pin", c.lib !== b.lib) +
+    sel("i-win", "win", [10,15,20,25,30].map(v => [String(v), String(v)]), c.win, "Config · drift window (years)", c.win !== b.win) +
+    sel("i-vin", "vintage", [["v2026-03","v2026-03"],["v2026-01","v2026-01"]], c.vintage, "Data · vintage", c.vintage !== b.vintage);
+  $("c-model").querySelectorAll("select").forEach(el => el.addEventListener("change", () => { cand.models[m][el.dataset.k] = el.value; $("sent").hidden = true; renderTabs(); renderModelPanels(); onEdit(); }));
+}
+function renderBaselineGlobal() {
+  $("b-global").innerHTML = `<div class="scope">Global · all models</div>` + ro("Metadata · jump-off year", BASELINE.jump) + ro("Metadata · region", BASELINE.region) + ro("Structure", sha("struct" + JSON.stringify(pins(BASELINE))));
+}
+const pins = c => MODELS.map(m => c.models[m].vintage);
 
+// ---------- fake engine ----------
+function evaluate(c) {
+  const rec = new Set(), changed = new Set(), rootNodes = new Set(), roots = [], pct = Object.fromEntries(MODELS.map(m => [m, 0]));
+  const own = {}; nodeOrder.forEach(n => own[n] = {});
+  const layers = {code:false, config:false, data:false, meta:false, struct:false};
+  const touch = (n, chg) => { rec.add(n); if (chg) changed.add(n); };
+  MODELS.forEach(m => {
+    const b = BASELINE.models[m], x = c.models[m];
+    if (x.vintage !== b.vintage) {
+      layers.data = layers.struct = true;
+      roots.push([m + "_raw", "data", `vintage ${b.vintage} → ${x.vintage}` + (REVISION[m] ? "" : " (no revisions)")]);
+      own[m + "_raw"].data = true; rootNodes.add(m + "_raw");
+      const r = REVISION[m]; touch(m + "_raw", true); touch(m + "_estimation", !!r); touch(m + "_projection", !!r); pct[m] += r;
+    }
+    if (x.code !== b.code) {
+      layers.code = true; roots.push([m + "_estimation", "code", `${m} repo ${b.code} → ${x.code}`]);
+      own[m + "_estimation"].code = own[m + "_projection"].code = true; rootNodes.add(m + "_estimation");
+      touch(m + "_estimation", true); touch(m + "_projection", true); pct[m] += .004 * SENS[m];
+    }
+    if (x.lib !== b.lib) {
+      layers.code = true; roots.push([m + "_estimation", "code", `model_lib ${b.lib} → ${x.lib}`]);
+      own[m + "_estimation"].code = own[m + "_projection"].code = true;
+      const chg = x.lib === "v0.4.0"; if (chg) rootNodes.add(m + "_estimation");
+      touch(m + "_estimation", chg); touch(m + "_projection", chg); if (chg) pct[m] += .001;
+    }
+    if (x.win !== b.win) {
+      layers.config = true; roots.push([m + "_estimation", "config", `drift window ${b.win} → ${x.win}`]);
+      own[m + "_estimation"].config = true; rootNodes.add(m + "_estimation");
+      touch(m + "_estimation", true); touch(m + "_projection", true);
+      const e = WINDOW_EFFECT[x.win] * SENS[m]; pct[m] += e;
+      if (m === "electricity") Object.entries(ELEC_TO).forEach(([d, k]) => { touch(d + "_projection", true); pct[d] += k * e; });
+    }
+  });
+  if (c.jump !== BASELINE.jump) {
+    layers.meta = true; roots.push(["metadata (global)", "metadata", `jump-off year ${BASELINE.jump} → ${c.jump}`]);
+    MODELS.forEach(m => { touch(m + "_estimation", true); touch(m + "_projection", true); pct[m] -= .006; });
+  }
+  if (c.region !== BASELINE.region) {
+    layers.meta = true; roots.push(["metadata (global)", "metadata", `region ${BASELINE.region} → ${c.region}; no node reads it`]);
+  }
+  const costPct = MODELS.reduce((s, m) => s + pct[m], 0) / MODELS.length * 1.83;
+  if (rec.size) touch("cost_index", Math.abs(costPct) > 1e-9);
+  if (changed.size) layers.data = true;
+  return {rec, changed, rootNodes, roots, pct, costPct, layers, own};
+}
+const kindOf = n => n === "cost_index" ? "index" : n === "passthrough" ? "raw" : n.split("_").pop();
+function nodeLayers(n, r) {
+  const k = kindOf(n), o = (r && r.own && r.own[n]) || {}, chg = r && r.changed.has(n);
+  return {
+    code: k === "raw" ? "na" : o.code ? "own" : "same",
+    config: k === "estimation" ? (o.config ? "own" : "same") : "na",
+    data: o.data ? "own" : chg ? "flow" : "same",
+  };
+}
+function layerDetail(n, key, st, r) {
+  const m = MODELS.find(x => n.startsWith(x + "_")), k = kindOf(n), c = state.committed;
+  if (st === "na") return "not used by this node";
+  if (st === "same") return "identical";
+  if (key === "code") { const b = BASELINE.models[m], x = c.models[m], p = [];
+    if (x.code !== b.code) p.push(`repo ${b.code} → ${x.code} · 94% similar`); if (x.lib !== b.lib) p.push(`model_lib ${b.lib} → ${x.lib}`); return p.join("; "); }
+  if (key === "config") return `drift_window: ${BASELINE.models[m].win} → ${c.models[m].win} · 97% similar`;
+  if (k === "raw") return `vintage ${c.models[m].vintage}: 412 rows vs 412 · ${REVISION[m] ? 37 : 0} differ`;
+  if (n === "cost_index") return `2030: ${COST_BASE} → ${(COST_BASE * (1 + r.costPct)).toFixed(1)} (${fmt(r.costPct)})`;
+  if (k === "projection") return `2030: ${BASE30[m]} → ${(BASE30[m] * (1 + r.pct[m])).toFixed(1)} (${fmt(r.pct[m])})`;
+  return `coefficients CSV · 3 of 4 rows differ`;
+}
 function why(c, r) {
   if (!r.roots.length) return "Nothing differs from the baseline. Every node would come from cache.";
-  const parts = [];
-  if (c.steel !== BASELINE.steel) parts.push(`the steel drift window went from ${BASELINE.steel} to ${c.steel} years, moving steel 2030 by ${fmt(r.pct.steel)}`);
-  if (c.elec !== BASELINE.elec) parts.push(`the electricity drift window went from ${BASELINE.elec} to ${c.elec} years, which also flows into steel, cement, insulation and paint`);
-  if (c.jump !== BASELINE.jump) parts.push(`the jump-off year moved to ${c.jump}, so every model re-estimated on one year less data`);
-  if (c.lib !== BASELINE.lib) parts.push(c.lib === "v0.3.2" ? `model_lib moved to v0.3.2; every model reran but produced identical output` : `model_lib moved to v0.4.0, which nudged every model slightly`);
-  if (c.vintage !== BASELINE.vintage) parts.push(`the ${c.vintage} data vintage revised the steel and lumber history`);
+  const s = r.roots.map(([n, l, w]) => `${n}: ${w}`).join("; ");
   const tail = Math.abs(r.costPct) > 1e-9 ? ` Together these move cost_index 2030 by ${fmt(r.costPct)}.` : " cost_index is unchanged.";
-  return parts.map((p, i) => i ? p : p[0].toUpperCase() + p.slice(1)).join("; ") + "." + tail;
+  return `${r.roots.length} root cause${r.roots.length > 1 ? "s" : ""}. ${s}.${tail}`;
 }
 const fmt = p => (p > 0 ? "+" : p < 0 ? "−" : "±") + Math.abs(p * 100).toFixed(1) + "%";
 const cls = p => p > 1e-9 ? "delta" : p < -1e-9 ? "delta down" : "delta zero";
 
-// DAG
-const dag = $("dag"), nodeEls = {};
-const nodeOrder = [];
+// ---------- DAG ----------
+const dag = $("dag"), nodeEls = {}, nodeOrder = [];
 ["Data", "Estimation", "Projection", "Index"].forEach(h => { const d = document.createElement("div"); d.className = "colhead"; d.textContent = h; dag.appendChild(d); });
 function addNode(name, col, row, extra) {
   const b = document.createElement("button"); b.type = "button"; b.className = "node" + (extra ? " " + extra : "");
   b.style.gridColumn = col; if (row) b.style.gridRow = row;
-  b.innerHTML = `<span>${name}</span><span class="s"></span>`; b.onclick = () => select(name);
+  b.innerHTML = `<span class="top"><span>${name}</span><span class="s"></span></span><span class="lstrip">${NODE_LAYERS.map(([k, , a]) => `<span class="lc" data-l="${k}" title="${k}">${a}</span>`).join("")}</span>`;
+  b.onclick = () => select(name);
   dag.appendChild(b); nodeEls[name] = b; nodeOrder.push(name);
 }
 MODELS.forEach((m, i) => { addNode(m + "_raw", 1, i + 2); addNode(m + "_estimation", 2, i + 2); addNode(m + "_projection", 3, i + 2); });
 addNode("passthrough", 1, 11);
 addNode("cost_index", 4, null, "index");
 
-let state = {committed: null, result: null, runNo: 123, selected: "steel_estimation", running: false};
+let state = {committed: null, result: null, runNo: 123, selected: "steel_estimation", running: false, focus: null};
+function paintGlobal(r) {
+  const g = k => r && r.layers[k] && r.roots.some(x => (k === "meta" ? x[1] === "metadata" : false)) || (k === "struct" && r && MODELS.some(m => state.committed.models[m].vintage !== BASELINE.models[m].vintage));
+  $("gband").innerHTML = `<span class="scope">Global</span>` + LAYERS.slice(3).map(([k, n]) =>
+    `<button type="button" class="gchip${g(k) ? " own" : ""}" data-l="${k}" aria-pressed="${state.focus === k}">${n} · ${g(k) ? "changed" : "same"}</button>`).join("") +
+    `<span class="muted small">one metadata file and one graph for all models</span>`;
+  $("gband").querySelectorAll(".gchip").forEach(b => b.onclick = () => { state.focus = state.focus === b.dataset.l ? null : b.dataset.l; refresh(); });
+}
 function paintDag(r, phase) {
   nodeOrder.forEach(n => {
     const el = nodeEls[n], s = el.querySelector(".s");
-    el.classList.remove("queued", "running", "recomputed", "changed", "root");
+    el.classList.remove("queued", "running", "recomputed", "changed", "root", "dim", "modelsel");
+    if (n.startsWith(tab + "_")) el.classList.add("modelsel");
     let label = "cache";
     if (phase && phase[n]) { el.classList.add(phase[n]); label = phase[n] === "queued" ? "waiting" : "running"; }
     else if (r && r.rec.has(n)) {
       if (r.changed.has(n)) { el.classList.add("changed"); label = "changed"; } else { el.classList.add("recomputed"); label = "same"; }
       if (r.rootNodes.has(n)) el.classList.add("root");
     }
+    const L = nodeLayers(n, phase ? null : r);
+    el.querySelectorAll(".lc").forEach(x => { const v = L[x.dataset.l]; x.className = "lc" + (v !== "same" ? " " + v : ""); });
+    if (state.focus && r && !phase) {
+      const f = state.focus;
+      const hit = f === "meta" ? state.committed.jump !== BASELINE.jump && /_(estimation|projection)$/.test(n)
+        : f === "struct" ? false : ["own", "flow"].includes(L[f]);
+      if (!hit) el.classList.add("dim");
+    }
     s.textContent = label;
     el.setAttribute("aria-pressed", n === state.selected);
   });
 }
 function select(n) {
-  state.selected = n; paintDag(state.result);
+  state.selected = n;
+  const m = MODELS.find(x => n.startsWith(x + "_")); if (m && m !== tab) { tab = m; renderTabs(); renderModelPanels(); }
+  paintDag(state.result);
   const r = state.result, d = $("nodedetail");
-  const m = MODELS.find(x => n.startsWith(x));
   let text;
   if (!r || !r.rec.has(n)) text = "Inputs unchanged, so the output was reused from cache.";
   else if (!r.changed.has(n)) text = "Recomputed because an input changed, but the output came out identical. The trace stops here.";
-  else if (n === "cost_index") text = `Recomputed. 2030 value ${(COST_BASE * (1 + r.costPct)).toFixed(1)} vs ${COST_BASE} (${fmt(r.costPct)}).`;
-  else if (m && n.endsWith("_projection")) text = `Recomputed. 2030 value ${(BASE30[m] * (1 + r.pct[m])).toFixed(1)} vs ${BASE30[m]} (${fmt(r.pct[m])}).`;
   else text = r.rootNodes.has(n) ? "Root cause: its own inputs changed while its upstream did not." : "Recomputed with a changed output.";
-  d.innerHTML = `<b class="mono">${n}</b> · ${text}`;
+  const L = nodeLayers(n, r);
+  const rows = NODE_LAYERS.map(([k, name]) => {
+    const st = L[k], b = st === "na" ? "—" : sha(n + k), cd = st === "na" ? "—" : st === "same" ? b : sha(n + k + "x");
+    const pill = st === "own" ? `<span class="pill chg">own</span>` : st === "flow" ? `<span class="pill chg">upstream</span>` : st === "na" ? `<span class="muted small">n/a</span>` : `<span class="pill ok">same</span>`;
+    return `<tr><td>${name}</td><td>${b}</td><td>${cd}</td><td>${pill} <span class="small muted">${layerDetail(n, k, st, r)}</span></td></tr>`;
+  }).join("");
+  const reads = /_(estimation|projection)$/.test(n) ? "reads jump_off_year from the global metadata" : "reads no global metadata keys";
+  d.innerHTML = `<p><b class="mono">${n}</b> · ${text}</p><table class="ltable"><tr><th>Layer</th><th>Baseline sha</th><th>Candidate sha</th><th>Delta</th></tr>${rows}</table><p class="small muted">Global: ${reads}.</p>`;
 }
 
 function renderResult(c, r, stale) {
-  const v = COST_BASE * (1 + r.costPct);
-  $("r-big").textContent = v.toFixed(1);
+  $("r-big").textContent = (COST_BASE * (1 + r.costPct)).toFixed(1);
   $("r-delta").textContent = fmt(r.costPct) + " vs " + COST_BASE; $("r-delta").className = cls(r.costPct);
-  const L = [["code","Code"],["config","Config"],["data","Data"],["meta","Metadata"],["struct","Structure"]];
-  $("r-layers").innerHTML = L.map(([k, n]) => `<div class="layer ${r.layers[k] ? "changed" : ""}"><b>${n}</b>${r.layers[k] ? "changed" : "same"}</div>`).join("");
+  $("r-layers").innerHTML = LAYERS.map(([k, n, , scope]) => {
+    let lbl = r.layers[k] ? "changed" : "same";
+    if (scope === "per model" && r.layers[k]) { const ms = MODELS.filter(m => [m + "_raw", m + "_estimation", m + "_projection"].some(x => ["own","flow"].includes(nodeLayers(x, r)[k]))); lbl = ms.length + " model" + (ms.length === 1 ? "" : "s"); }
+    return `<button type="button" class="layer ${r.layers[k] ? "changed" : ""}" data-l="${k}" aria-pressed="${state.focus === k}"><b>${n}</b>${lbl}<br><span style="font-weight:500;opacity:.8">${scope}</span></button>`;
+  }).join("");
+  $("r-layers").querySelectorAll(".layer").forEach(b => b.onclick = () => { state.focus = state.focus === b.dataset.l ? null : b.dataset.l; refresh(); });
   $("r-why").textContent = why(c, r);
   $("r-roots").innerHTML = r.roots.length ? r.roots.map(([n, l, w]) => `<tr><td class="mono">${n}</td><td>${w}</td><td><span class="pill chg">${l}</span></td></tr>`).join("") : `<tr><td class="muted">None</td><td></td><td></td></tr>`;
   const moved = MODELS.filter(m => Math.abs(r.pct[m]) > 1e-9).sort((a, b) => Math.abs(r.pct[b]) - Math.abs(r.pct[a]));
@@ -311,47 +419,46 @@ function renderResult(c, r, stale) {
     `<tr><td class="mono"><b>cost_index</b></td><td>${COST_BASE}</td><td class="${cls(r.costPct)}">${fmt(r.costPct)}</td></tr>`;
   ["result", "r-layers", "r-why", "r-roots", "r-moved"].forEach(id => $(id).classList.toggle("stale", !!stale));
 }
+function refresh() { if (state.result) { renderResult(state.committed, state.result, false); paintGlobal(state.result); } paintDag(state.result); }
 
-function sameAs(a, b) { return a && Object.keys(a).every(k => a[k] === b[k]); }
+const sameAs = (a, b) => a && JSON.stringify(a) === JSON.stringify(b);
 function onEdit() {
-  const c = read();
-  Object.keys(fields).forEach(k => $(fields[k]).classList.toggle("edited", c[k] !== BASELINE[k]));
-  const dirty = !sameAs(state.committed, c);
+  $("f-jump").classList.toggle("edited", cand.jump !== BASELINE.jump);
+  $("f-region").classList.toggle("edited", cand.region !== BASELINE.region);
+  const sp = sha("struct" + JSON.stringify(pins(cand))), bp = sha("struct" + JSON.stringify(pins(BASELINE)));
+  $("c-struct").textContent = sp === bp ? `${sp} · same pins as baseline` : `${sp} · pins moved (was ${bp})`;
+  const dirty = !sameAs(state.committed, cand);
   $("btn-run").disabled = !dirty || state.running;
   $("btn-send").disabled = dirty || state.running || !state.committed;
   const p = $("preview");
   if (dirty) {
-    const r = evaluate(c);
+    const r = evaluate(cand);
     p.hidden = false;
-    p.textContent = r.rec.size ? `Not run yet. Running will recompute ${r.rec.size} of 29 nodes; ${29 - r.rec.size} come from cache.` : "Not run yet. This matches the baseline, so every node would come from cache.";
+    p.textContent = r.rec.size ? `Not run yet. Running will recompute ${r.rec.size} of 29 nodes; ${29 - r.rec.size} come from cache.` : r.roots.length ? "Not run yet. Only the global metadata changes; no node reads it, so every node comes from cache." : "Not run yet. This matches the baseline, so every node would come from cache.";
     $("status").textContent = `run ${state.runNo + 1} · draft`; $("status").className = "pill chg";
     $("c-h").textContent = `run ${state.runNo + 1}`; $("c-sub").textContent = "Draft run plan, saved outside git";
     ["result", "r-layers", "r-why", "r-roots", "r-moved"].forEach(id => $(id).classList.add("stale"));
   } else {
     p.hidden = true;
-    if (state.result) renderResult(c, state.result, false);
+    if (state.result) renderResult(state.committed, state.result, false);
     $("status").textContent = `run ${state.runNo} · finished`; $("status").className = "pill";
     $("c-h").textContent = `run ${state.runNo}`; $("c-sub").textContent = "Run plan, saved outside git";
   }
 }
-Object.values(inputs).forEach(el => el.addEventListener("change", () => { $("sent").hidden = true; onEdit(); }));
 
 function run() {
-  const c = read(), r = evaluate(c);
-  state.running = true; state.runNo += 1; $("preview").hidden = true; $("sent").hidden = true;
+  const c = clone(cand), r = evaluate(c);
+  state.running = true; state.runNo += 1; state.focus = null; $("preview").hidden = true; $("sent").hidden = true;
   $("btn-run").disabled = true; $("btn-send").disabled = true; $("btn-reset").disabled = true;
   $("status").textContent = `run ${state.runNo} · running`; $("status").className = "pill chg";
   $("c-h").textContent = `run ${state.runNo}`;
-  const order = nodeOrder.filter(n => r.rec.has(n));
-  // run in dependency order: raw, estimation, electricity projection, other projections, cost_index
   const rank = n => n.endsWith("_raw") ? 0 : n.endsWith("_estimation") ? 1 : n === "electricity_projection" ? 2 : n.endsWith("_projection") ? 3 : 4;
-  order.sort((a, b) => rank(a) - rank(b));
+  const order = nodeOrder.filter(n => r.rec.has(n)).sort((a, b) => rank(a) - rank(b));
   const phase = Object.fromEntries(order.map(n => [n, "queued"]));
-  state.result = null; paintDag(null, phase);
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const step = reduce ? 0 : Math.max(90, Math.min(380, 2400 / Math.max(order.length, 1)));
+  state.committed = c; state.result = null; paintDag(null, phase);
+  const step = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : Math.max(90, Math.min(380, 2400 / Math.max(order.length, 1)));
   let i = 0;
-  const partial = {rec: new Set(), changed: r.changed, rootNodes: r.rootNodes};
+  const partial = {rec: new Set(), changed: r.changed, rootNodes: r.rootNodes, own: r.own};
   const tick = () => {
     if (i > 0) { delete phase[order[i - 1]]; partial.rec.add(order[i - 1]); }
     if (i < order.length) {
@@ -366,23 +473,24 @@ function run() {
 function finish(c, r) {
   state.running = false; state.committed = c; state.result = r;
   $("bar").style.width = "100%";
-  const secs = Math.round(6 + r.rec.size * 11.5);
-  $("run-info").textContent = `${r.rec.size} recomputed · ${29 - r.rec.size} from cache · ${secs} s`;
+  $("run-info").textContent = `${r.rec.size} recomputed · ${29 - r.rec.size} from cache · ${Math.round(6 + r.rec.size * 11.5)} s`;
   $("btn-reset").disabled = false;
-  paintDag(r); renderResult(c, r, false); onEdit(); select(state.selected);
-  addHistory(state.runNo, c, r, false);
+  renderResult(c, r, false); paintGlobal(r); onEdit(); select(state.selected);
+  addHistory(state.runNo, r, false);
 }
 
-const history = $("history");
-function addHistory(no, c, r, base) {
+function addHistory(no, r, base) {
   const d = document.createElement("div"); d.className = "hrun" + (base ? " base" : "");
   const what = base ? "baseline · signed off" : (r.roots.map(x => x[2]).join("; ") || "no changes");
-  d.innerHTML = `<b>run ${no}</b> <span class="${cls(r ? r.costPct : 0)} small">${r ? fmt(r.costPct) : "—"}</span><br><span class="muted">${what}</span>`;
-  history.insertBefore(d, base ? null : history.firstChild);
+  d.innerHTML = `<b>run ${no}</b> <span class="${cls(r.costPct)} small">${fmt(r.costPct)}</span><br><span class="muted">${what}</span>`;
+  const h = $("history"); h.insertBefore(d, base ? null : h.firstChild);
 }
 
 $("btn-run").onclick = run;
-$("btn-reset").onclick = () => { Object.entries(BASELINE).forEach(([k, v]) => inputs[k].value = v); $("sent").hidden = true; onEdit(); };
+$("btn-reset").onclick = () => {
+  cand = clone(BASELINE); inputsGlobal.jump.value = cand.jump; inputsGlobal.region.value = cand.region;
+  $("sent").hidden = true; renderTabs(); renderModelPanels(); onEdit();
+};
 $("btn-send").onclick = () => {
   const s = $("sent"); s.hidden = false;
   s.innerHTML = `Sent run ${state.runNo} to the reviewer. They'll read it as a story: <a href="story-review.html">open the reviewer's view</a>.`;
@@ -390,11 +498,12 @@ $("btn-send").onclick = () => {
 
 // Opening state: run 123 has finished (steel drift window 20 → 15).
 (function boot() {
-  addHistory(122, BASELINE, {costPct: 0, roots: []}, true);
-  const c = read(), r = evaluate(c);
+  addHistory(122, {costPct: 0, roots: []}, true);
+  const c = clone(cand), r = evaluate(c);
   state.committed = c; state.result = r;
   $("bar").style.width = "100%";
-  addHistory(123, c, r, false);
-  paintDag(r); renderResult(c, r, false); onEdit(); select("steel_estimation");
+  addHistory(123, r, false);
+  renderBaselineGlobal(); renderTabs(); renderModelPanels();
+  renderResult(c, r, false); paintGlobal(r); onEdit(); select("steel_estimation");
 })();
 </script>
