@@ -4,6 +4,8 @@ Interactive, presentation-only pages with example data from the construction pac
 
 Published privately (index with both pages): https://claude.ai/artifact/KbRiXpkvgPRjnHDeDhSjj2
 
+Live site (GitHub Pages): https://garthmortensen.github.io/merklops/
+
 ## Pages
 - `index.html`: start page, links to both views.
 - `workbench.html`: **run workbench** (model builder). Baseline | difference | candidate, the DAG below, run history at the foot.
